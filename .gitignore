@@ -1,2 +1,5 @@
 
 OpenPose/model/pose_deploy_final.om
+*.log
+*.idx
+*.check_cache

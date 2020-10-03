@@ -1,0 +1,13 @@
+/home/mind/AscendProjects/GestureDetect/build/intermediates/CMakeFiles/install/strip.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/CMakeFiles/install.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/CMakeFiles/install/local.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/CMakeFiles/list_install_components.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/CMakeFiles/edit_cache.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/CMakeFiles/rebuild_cache.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/src/CMakeFiles/install/strip.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/src/CMakeFiles/edit_cache.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/src/CMakeFiles/main.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/src/CMakeFiles/rebuild_cache.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/src/CMakeFiles/list_install_components.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/src/CMakeFiles/install/local.dir
+/home/mind/AscendProjects/GestureDetect/build/intermediates/src/CMakeFiles/install.dir
