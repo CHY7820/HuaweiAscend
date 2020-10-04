@@ -13,6 +13,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  "../../../out")
 set(CMAKE_CXX_FLAGS_DEBUG "-fPIC -O0 -g -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-fPIC -O2 -Wall")
 
+add_definitions(-DENABLE_DVPP_INTERFACE)
 set(INC_PATH $ENV{DDK_PATH})
 
 if (NOT DEFINED ENV{DDK_PATH})
@@ -33,6 +34,8 @@ endif()
 
 # Header path
 include_directories(
+    $ENV{HOME}/ascend_ddk/arm/include/
+    $ENV{HOME}/ascend_ddk/arm/include/opencv4
     ${INC_PATH}/acllib/include/
     ../inc/
 )
@@ -44,20 +47,25 @@ endif()
 # add host lib path
 link_directories(
     ${LIB_PATH}
+    $ENV{HOME}/ascend_ddk/arm/lib/
+    ${INC_PATH}/atc/lib64
 )
 
 add_executable(main
         utils.cpp
+        dvpp_process.cpp
+        dvpp_resize.cpp
+        dvpp_jpegd.cpp
         model_process.cpp
         pose_process.cpp
         gesture_process.cpp
-        detect_process.cpp
+        gesture_detect.cpp
         main.cpp)
 
 if(target STREQUAL "Simulator_Function")
     target_link_libraries(main funcsim)
 else()
-    target_link_libraries(main ascendcl stdc++)
+    target_link_libraries(main ascendcl stdc++ acl_dvpp opencv_core opencv_imgproc opencv_imgcodecs dl rt)
 endif()
 
 install(TARGETS main DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

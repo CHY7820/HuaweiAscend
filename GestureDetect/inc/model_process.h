@@ -21,6 +21,7 @@ public:
     * @brief Constructor
     */
     ModelProcess();
+//    ModelProcess(uint32_t modelId);
 
     /**
     * @brief Destructor
@@ -57,6 +58,8 @@ public:
     * @return result
     */
     Result CreateInput(void *inputDataBuffer, size_t bufferSize);
+//    Result CreateInput(void *inputBuf1, size_t bufsize1,
+//                        void* inputBuf2, size_t bufsize2);
 
     /**
     * @brief destroy input resource
@@ -88,10 +91,18 @@ public:
     /**
     * @brief get model output result
     */
-    void OutputModelResult();
+//    void OutputModelResult();
+
+    aclmdlDataset * GetModelOutputData() { return output_; }
+
+    void set_runmode(aclrtRunMode runMode) { runMode_ = runMode; }
+    void set_modelId(uint32_t modelId) { modelId_ = modelId; }
+
+protected:
+    uint32_t modelId_;
+    aclrtRunMode runMode_;
 
 private:
-    uint32_t modelId_;
     size_t modelMemSize_;
     size_t modelWeightSize_;
     void *modelMemPtr_;
@@ -100,5 +111,9 @@ private:
     aclmdlDesc *modelDesc_;
     aclmdlDataset *input_;
     aclmdlDataset *output_;
+
+
+
+
 };
 

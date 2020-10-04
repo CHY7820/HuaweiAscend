@@ -19,6 +19,9 @@ extern bool g_isDevice;
 ModelProcess::ModelProcess() :modelId_(0), modelMemSize_(0), modelWeightSize_(0), modelMemPtr_(nullptr),
 modelWeightPtr_(nullptr), loadFlag_(false), modelDesc_(nullptr), input_(nullptr), output_(nullptr) {}
 
+//ModelProcess::ModelProcess(uint32_t modelId) :modelId_(modelId), modelMemSize_(0), modelWeightSize_(0), modelMemPtr_(nullptr),
+//modelWeightPtr_(nullptr), loadFlag_(false), modelDesc_(nullptr), input_(nullptr), output_(nullptr) {}
+
 ModelProcess::~ModelProcess()
 {
     Unload();
@@ -225,61 +228,61 @@ void ModelProcess::DumpModelOutputResult()
     INFO_LOG("dump data success");
     return;
 }
-
-void ModelProcess::OutputModelResult()
-{
-    for (size_t i = 0; i < aclmdlGetDatasetNumBuffers(output_); ++i) {
-        aclDataBuffer* dataBuffer = aclmdlGetDatasetBuffer(output_, i);
-        void* data = aclGetDataBufferAddr(dataBuffer);
-        uint32_t len = aclGetDataBufferSize(dataBuffer);
-
-        void *outHostData = NULL;
-        aclError ret = ACL_ERROR_NONE;
-        float *outData = NULL;
-        if (!g_isDevice) {
-            aclError ret = aclrtMallocHost(&outHostData, len);
-            if (ret != ACL_ERROR_NONE) {
-                ERROR_LOG("aclrtMallocHost failed, ret[%d]", ret);
-                return;
-            }
-
-            ret = aclrtMemcpy(outHostData, len, data, len, ACL_MEMCPY_DEVICE_TO_HOST);
-            if (ret != ACL_ERROR_NONE) {
-                ERROR_LOG("aclrtMemcpy failed, ret[%d]", ret);
-                return;
-            }
-
-            outData = reinterpret_cast<float*>(outHostData);
-        } else {
-            outData = reinterpret_cast<float*>(data);
-        }
-        map<float, unsigned int, greater<float> > resultMap;
-        for (unsigned int j = 0; j < len / sizeof(float); ++j) {
-            resultMap[*outData] = j;
-            outData++;
-        }
-
-        int cnt = 0;
-        for (auto it = resultMap.begin(); it != resultMap.end(); ++it) {
-            // print top 5
-            if (++cnt > 5) {
-                break;
-            }
-
-            INFO_LOG("top %d: index[%d] value[%lf]", cnt, it->second, it->first);
-        }
-        if (!g_isDevice) {
-            ret = aclrtFreeHost(outHostData);
-            if (ret != ACL_ERROR_NONE) {
-                ERROR_LOG("aclrtFreeHost failed, ret[%d]", ret);
-                return;
-            }
-        }
-    }
-
-    INFO_LOG("output data success");
-    return;
-}
+//
+//void ModelProcess::OutputModelResult()
+//{
+//    for (size_t i = 0; i < aclmdlGetDatasetNumBuffers(output_); ++i) {
+//        aclDataBuffer* dataBuffer = aclmdlGetDatasetBuffer(output_, i);
+//        void* data = aclGetDataBufferAddr(dataBuffer);
+//        uint32_t len = aclGetDataBufferSize(dataBuffer);
+//
+//        void *outHostData = NULL;
+//        aclError ret = ACL_ERROR_NONE;
+//        float *outData = NULL;
+//        if (!g_isDevice) {
+//            aclError ret = aclrtMallocHost(&outHostData, len);
+//            if (ret != ACL_ERROR_NONE) {
+//                ERROR_LOG("aclrtMallocHost failed, ret[%d]", ret);
+//                return;
+//            }
+//
+//            ret = aclrtMemcpy(outHostData, len, data, len, ACL_MEMCPY_DEVICE_TO_HOST);
+//            if (ret != ACL_ERROR_NONE) {
+//                ERROR_LOG("aclrtMemcpy failed, ret[%d]", ret);
+//                return;
+//            }
+//
+//            outData = reinterpret_cast<float*>(outHostData);
+//        } else {
+//            outData = reinterpret_cast<float*>(data);
+//        }
+//        map<float, unsigned int, greater<float> > resultMap;
+//        for (unsigned int j = 0; j < len / sizeof(float); ++j) {
+//            resultMap[*outData] = j;
+//            outData++;
+//        }
+//
+//        int cnt = 0;
+//        for (auto it = resultMap.begin(); it != resultMap.end(); ++it) {
+//            // print top 5
+//            if (++cnt > 5) {
+//                break;
+//            }
+//
+//            INFO_LOG("top %d: index[%d] value[%lf]", cnt, it->second, it->first);
+//        }
+//        if (!g_isDevice) {
+//            ret = aclrtFreeHost(outHostData);
+//            if (ret != ACL_ERROR_NONE) {
+//                ERROR_LOG("aclrtFreeHost failed, ret[%d]", ret);
+//                return;
+//            }
+//        }
+//    }
+//
+//    INFO_LOG("output data success");
+//    return;
+//}
 
 void ModelProcess::DestroyOutput()
 {
