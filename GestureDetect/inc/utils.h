@@ -44,7 +44,8 @@ using namespace std;
 #define SHARED_PRT_DVPP_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { acldvppFree(p); }))
 #define SHARED_PRT_U8_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { delete[](p); }))
 
-#define FRAME_LENGTH 50
+#define FRAME_LENGTH 30
+#define PEOPLE_MOST 10
 
 template<class Type>
 std::shared_ptr<Type> MakeSharedNoThrow() {
@@ -92,6 +93,7 @@ struct Rect {
 typedef struct key_points{
     float point_x;
     float point_y;
+	float score;
     int num;
 } key_pointsT;
 
@@ -99,13 +101,30 @@ typedef struct key_points{
 typedef struct connection{
     int point_1;
     int point_2;
+	// score是连接的分数
     float score;
+	//它两头的关键点分数
+	float score1;
+	float score2;
 } connectionT;
 
+typedef struct ohuamn {
+	//全部为负数
+	// 存的是全局序号
+	int p[18] = { -1 };
+	float allscore = 0;
+	int keynum = 0;
+	int flag = -1;
+} human;
 
+// jiashi changed
 typedef struct EngineTransNew
 {
     //    std::vector<std::vector<std::vector<float>>> data;
+	// 最后一维是关键点
+	// 倒数第二维是帧
+	// 正数第二维是x与y
+	// 那第一维应该是人？
     float data [1][2][FRAME_LENGTH][18];
     //    float data [2][30][14];
     size_t buffer_size;   // buffer size
@@ -122,7 +141,7 @@ struct BBox {
  * Utils
  */
 class Utils {
-    public:
+public:
 
     /**
     * @brief create device buffer of pic
@@ -139,17 +158,11 @@ class Utils {
     static void GetAllFiles(const std::string &path, std::vector<std::string> &file_vec);
 
     static void GetPathFiles(const std::string &path, std::vector<std::string> &file_vec);
-
     static void* CopyDataToDevice(void* data, uint32_t dataSize, aclrtMemcpyKind policy);
-
     static void* CopyDataDeviceToLocal(void* deviceData, uint32_t dataSize);
-
     static void* CopyDataHostToDevice(void* deviceData, uint32_t dataSize);
-
     static void* CopyDataDeviceToDevice(void* deviceData, uint32_t dataSize);
-
     static int ReadImageFile(ImageData& image, std::string fileName);
-
     static Result CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode);
 };
 

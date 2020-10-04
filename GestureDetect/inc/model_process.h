@@ -95,6 +95,9 @@ public:
 
     aclmdlDataset * GetModelOutputData() { return output_; }
 
+    void* GetInferenceOutputItem(uint32_t& itemDataSize,
+    aclmdlDataset* inferenceOutput, uint32_t idx);
+
     void set_runmode(aclrtRunMode runMode) { runMode_ = runMode; }
     void set_modelId(uint32_t modelId) { modelId_ = modelId; }
 

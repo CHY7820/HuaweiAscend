@@ -4,12 +4,36 @@
 #include "model_process.h"
 #include "utils.h"
 #include "pose_process.h"
-#include "opencv2/opencv.hpp"
-#include "opencv2/imgcodecs/legacy/constants_c.h"
-#include "opencv2/imgproc/types_c.h"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/core/core.hpp"
+#include "acl/acl.h"
+#include <cstddef>
+#include <cmath>
+//#include <Eigen/Core>
+#include <Eigen/Dense>
+#include "opencv2/highgui.hpp"
+#include "opencv2/core/eigen.hpp"
+#include "opencv2/imgproc.hpp"
 
+int IMG_NUM;
+int file_num = 0;
+int LAST_GES = -1;
+float temp_key_points[2][14] = {0};
+Eigen::MatrixXf left_matrix(16, 16);
+Eigen::MatrixXf right_matrix(16, 16);
+Eigen::MatrixXf top_matrix(16, 16);
+Eigen::MatrixXf bottom_matrix(16, 16);
+Eigen::MatrixXf thre(16, 16);
+//Eigen::MatrixXf thre_2(10, 1);
+Eigen::MatrixXf thre_result(16, 16);
+
+int limbSeq[19][2] = {{2,3}, {2,6}, {3,4}, {4, 5}, {6, 7}, {7, 8}, {2, 9}, {9, 10}, {10, 11}, {2, 12},
+{12, 13}, {13, 14}, {2, 1}};
+
+int mapIdx[19][2] = {{31,32}, {39,40}, {33,34}, {35,36}, {41,42}, {43,44}, {19,20}, {21,22}, {23,24},
+{25,26}, {27,28}, {29,30}, {47,48}};
+int BAD_NUM;
+float TOTAL_RIGHT, TOTAL_LEFT, TOTAL_TOP, TOTAL_BOTTOM;
+float TEMP_LEFT, TEMP_RIGHT, TEMP_BOTTOM, TEMP_TOP;
+std::shared_ptr<EngineTransNewT> motion_data_old = std::make_shared<EngineTransNewT>();
 
 OpenPoseProcess::OpenPoseProcess() : ModelProcess() {}
 //OpenPoseProcess::OpenPoseProcess(uint32_t modelId) : ModelProcess(modelId) {};
@@ -21,6 +45,22 @@ OpenPoseProcess::OpenPoseProcess() : ModelProcess() {}
 //    DestroyOutput();
 //}
 
+int find_index(vector<int>::iterator begin, vector<int>::iterator end, int element){
+    auto temp = begin;
+    while(temp != end){
+        if(*temp == element){
+            return element;
+        }
+        temp += 1;
+    }
+    return -1;
+}
+
+
+// 自定义排序规则
+bool cmp2(connectionT a,connectionT b) {
+    return a.score>b.score;
+}
 
 Result OpenPoseProcess::Preprocess(DvppProcess& dvpp, ImageData& resizedImage, ImageData& srcImage)
 {
@@ -63,12 +103,13 @@ Result OpenPoseProcess::Inference(aclmdlDataset*& inferenceOutput, ImageData& re
 
 Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput, std::shared_ptr<EngineTransNewT> motion_data_new) {
 
-
-
     uint32_t dataSize = 0;
     // 获取第2个输出，那么这个输出是heatmap
     float* newresult = (float *)GetInferenceOutputItem(dataSize, modelOutput, 1);
-
+//    float* newresult1 = (float *)GetInferenceOutputItem(dataSize, modelOutput, 0);
+//
+    std::cout<<newresult[1]<<std::endl;
+//    std::cout<<*newresult1<<std::endl;
     cv::Mat temp_mat;
     cv::Mat temp_mat_0;
     cv::Mat temp_mat_1;
@@ -93,7 +134,7 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
     //最大分数
     float temp_aa;
     bool if_valid = true;
-    Mat out1(cv::Size(128, 128), CV_8UC3, cv::Scalar(255, 255, 255));
+    cv::Mat out1(cv::Size(128, 128), CV_8UC3, cv::Scalar(255, 255, 255));
     // 找出18个关键点
     for (int pic_num = 0; pic_num < 18; pic_num++) {
         // ???
@@ -272,7 +313,7 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
 
                     Eigen::Matrix <float, 10, 1>score_midpts = vec_x * vec[0] + vec_y * vec[1];
                     // 64就是0.5 * oriImg.shape[0]
-                    float score_with_dist_prior = score_midpts.sum() / 10 + min(64 / (norm - 1), 0.0);
+                    float score_with_dist_prior = score_midpts.sum() / 10 + std::min(64.0 / (norm - 1), 0.0);
 
                     if (score_with_dist_prior > 0) {
                         int bad_num = 0;
@@ -349,27 +390,28 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
     //connection_all里存了连接的关键点的全局序号，连接得分，人体预备得分
     // 里面是vector<connectionT>
     //
-    for (int k = 0; k < len(mapIdx) + 1; k++) {
+    vector<human> subset;
+    for (int k = 0; k < 19; k++) {
         vector<connectionT>temp_con = connection_all[k];
         //我的partAs里面要放第k种连接的全局序号
         vector<int> partAs;
         vector<int> partBs;
-        for (int l = 0; l < len(temp_con); l++) {
+
+        for (int l = 0; l < temp_con.size(); l++) {
             partAs.push_back(temp_con[l].point_1);
             partBs.push_back(temp_con[l].point_2);
         }
 
         int indexA = limbSeq[k][0] - 1;
         int indexB = limbSeq[k][1] - 1;
-        vector<human> subset;
 
-        for (int i = 0; i < len(connection_all[k])+1; i++) {
+
+        for (int i = 0; i < connection_all[k].size(); i++) {
             int found = 0;
             int subset_idx[2] = { -1,-1 };
-            for (j = 0; j < len(subset); j++) {
-                if subset[j].p[indexA] == partAs[i] || subset[j].p[indexB] == partsB[i]
-                    subset_idx[found] = j;
-                found += 1;
+            for (int j = 0; j < subset.size(); j++) {
+                if(subset[j].p[indexA] == partAs[i] || subset[j].p[indexB] == partBs[i]) {subset_idx[found] = j;}
+                found ++;
             }
             if (found == 1) {
                 int j = subset_idx[0];
@@ -429,8 +471,8 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
     int maxscore = -1;
     int best_id = -1;
     for (int h = 0; h < subset.size(); h++) {
-        if (subset[h].flag < 0) continue;
-        if (subset[h].keynum < 18 || subset[h].allscore / 18 < 0.4) continue;
+//        if (subset[h].flag < 0) continue;
+//        if (subset[h].keynum < 18 || subset[h].allscore / 18 < 0.4) continue;
         if (subset[h].allscore > maxscore)
         {
             maxscore = subset[h].allscore;
@@ -439,8 +481,8 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
     }
     // 找全局序号
     int temp_index[18] = { -1 };
-    for (int aa = 0; a < 18; aa++) {
-        temp_index[aa] = subset[h].p[aa];
+    for (int aa = 0; aa < 18; aa++) {
+        temp_index[aa] = subset[best_id].p[aa];
     }
     // 找到的最中间的人的18个关键点保存在temp_key_points中
     for (int aa = 0; aa < 18; aa++) {
@@ -487,7 +529,7 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
     cv::line(out1, x11, x12, cv::Scalar(255, 0, 0), 1);
     cv::line(out1, x12, x13, cv::Scalar(255, 0, 0), 1);
 
-    cv::imwrite("../result.jpg", out1);
+    cv::imwrite("../out/result.jpg", out1);
 
 
 

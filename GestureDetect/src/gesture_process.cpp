@@ -1,21 +1,7 @@
 
 #include "gesture_process.h"
 
-int find_index(vector<int>::iterator begin, vector<int>::iterator end, int element){
-    auto temp = begin;
-    while(temp != end){
-        if(*temp == element){
-            return element;
-        }
-        temp += 1;
-    }
-    return -1;
-}
 
-// 自定义排序规则
-bool cmp2(connectionT a,connectionT b) {
-    return a.score>b.score;
-}
 
 
 GestureProcess::GestureProcess() : ModelProcess() {}
@@ -45,7 +31,7 @@ Result GestureProcess::Inference(aclmdlDataset*& inferenceOutput, std::shared_pt
 
 
 //
-//Result GestureProcess::Postprocess(aclmdlDataset* modelOutput){
+Result GestureProcess::Postprocess(aclmdlDataset* modelOutput){
 //    uint32_t dataSize = 0;
 //    //
 //    float* newresult = (float *)GetInferenceOutputItem(dataSize, modelOutput, 0);
@@ -140,7 +126,7 @@ Result GestureProcess::Inference(aclmdlDataset*& inferenceOutput, std::shared_pt
 //        }
 //    }
 //
-//    return SUCCESS;
-//}
+    return SUCCESS;
+}
 
 

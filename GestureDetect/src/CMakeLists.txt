@@ -23,6 +23,10 @@ else ()
     message(STATUS "env INC_PATH: ${INC_PATH}")
 endif()
 
+find_package(Eigen3 REQUIRED)
+
+
+
 set(LIB_PATH $ENV{NPU_HOST_LIB})
 
 if (NOT DEFINED ENV{NPU_HOST_LIB})
@@ -33,10 +37,12 @@ else ()
 endif()
 
 # Header path
+# message(STATUS ${EIGEN3_INCLUDE_DIRS})
 include_directories(
     $ENV{HOME}/ascend_ddk/arm/include/
     $ENV{HOME}/ascend_ddk/arm/include/opencv4
     ${INC_PATH}/acllib/include/
+    ${EIGEN3_INCLUDE_DIRS}
     ../inc/
 )
 

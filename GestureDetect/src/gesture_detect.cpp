@@ -184,16 +184,21 @@ Result GestureDetect::Process() {
     int image_num = 0;
     clock_t start_time = clock();
     for (;;image_num++) {
+        std::cout<<image_num<<std::endl;
+
         image_num %= 100;
         // 图像文件的路径
         string imageFile = "../data/" + to_string(image_num) + ".jpg";
         const char* tmp = imageFile.data();
+        std::cout<<tmp<<std::endl;
         // 检查该文件是否存在
         if ((access(tmp, 0)) == -1) {
+            break;
             image_num--;
+            std::cout<<"image_num-- "<<std::endl;
             // 如果一秒30帧，平均一帧是0.033s，等待0.04s，差不多下一帧就到了
             usleep(40000);
-            continue;
+//            continue;
         }
 
         // 读取图片时间
@@ -209,7 +214,7 @@ Result GestureDetect::Process() {
         }
         //预处理图片:读取图片,讲图片缩放到模型输入要求的尺寸
         ImageData resizedImage;
-        Result ret = OpenposeModel_.Preprocess(resizedImage, image);
+        Result ret = OpenposeModel_.Preprocess(dvpp_,resizedImage, image);
         if (ret != SUCCESS) {
             ERROR_LOG("Read file %s failed, continue to read next", imageFile.c_str());
             continue;
@@ -241,6 +246,7 @@ Result GestureDetect::Process() {
         ret = OpenposeModel_.Postprocess(image, inferenceOutput, motion_data_new);
         success_num++;
         if (ret != SUCCESS) {
+            std::cout<<"Hello"<<std::endl;
             continue;
         }
 
@@ -262,7 +268,7 @@ Result GestureDetect::Process() {
             }
             std::cout << "ges_time time " << double(clock() - ges_time) / CLOCKS_PER_SEC << std::endl;
             // 数据后处理
-            ret = GestureModel_.PostGestureProcess(gestureOutput);
+            ret = GestureModel_.Postprocess(gestureOutput);
             if (ret != SUCCESS) {
                 ERROR_LOG("Process model inference output data failed");
                 // 退出程序
@@ -298,8 +304,8 @@ Result GestureDetect::Process() {
 
 
 void GestureDetect::DeInit() {
-    OpenPoseModel_.DestroyResource();
-    GestureModel_.DestroyResource();
+    //OpenPoseModel_.DestroyResource();
+    //GestureModel_.DestroyResource();
     aclError ret;
     if (stream_ != nullptr) {
         ret = aclrtDestroyStream(stream_);

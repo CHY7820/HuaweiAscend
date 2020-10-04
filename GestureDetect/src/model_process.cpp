@@ -133,6 +133,7 @@ void ModelProcess::DestroyInput()
     input_ = nullptr;
 }
 
+
 Result ModelProcess::CreateOutput()
 {
     if (modelDesc_ == nullptr) {
@@ -147,6 +148,10 @@ Result ModelProcess::CreateOutput()
     }
 
     size_t outputSize = aclmdlGetNumOutputs(modelDesc_);
+
+//    std::cout<<"modelDesc: "<<modelDesc_<<std::endl;
+//    std::cout<<"outputSize: "<<outputSize<<std::endl;
+
     for (size_t i = 0; i < outputSize; ++i) {
         size_t buffer_size = aclmdlGetOutputSizeByIndex(modelDesc_, i);
 
@@ -283,6 +288,45 @@ void ModelProcess::DumpModelOutputResult()
 //    INFO_LOG("output data success");
 //    return;
 //}
+
+void* ModelProcess::GetInferenceOutputItem(uint32_t& itemDataSize, aclmdlDataset* inferenceOutput, uint32_t idx) {
+    //    printf("get output id %d\n", idx);
+    aclDataBuffer* dataBuffer = aclmdlGetDatasetBuffer(inferenceOutput, idx);
+    if (dataBuffer == nullptr) {
+        ERROR_LOG("Get the %dth dataset buffer from model "
+        "inference output failed", idx);
+        return nullptr;
+    }
+
+    void* dataBufferDev = aclGetDataBufferAddr(dataBuffer);
+    if (dataBufferDev == nullptr) {
+        ERROR_LOG("Get the %dth dataset buffer address "
+        "from model inference output failed", idx);
+        return nullptr;
+    }
+
+    size_t bufferSize = aclGetDataBufferSize(dataBuffer);
+    if (bufferSize == 0) {
+        ERROR_LOG("The %dth dataset buffer size of "
+        "model inference output is 0", idx);
+        return nullptr;
+    }
+
+    void* data = nullptr;
+    if (runMode_ == ACL_HOST) {
+        data = Utils::CopyDataDeviceToLocal(dataBufferDev, bufferSize);
+        if (data == nullptr) {
+            ERROR_LOG("Copy inference output to host failed");
+            return nullptr;
+        }
+    }
+    else {
+        data = dataBufferDev;
+    }
+
+    itemDataSize = bufferSize;
+    return data;
+}
 
 void ModelProcess::DestroyOutput()
 {
