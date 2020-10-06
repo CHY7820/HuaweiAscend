@@ -12,6 +12,8 @@
 #include <dirent.h>
 #include <string.h>
 #include <unistd.h>
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 
 GestureDetect::GestureDetect(const char* kOpenPoseModelPath,const char* kGestureModelPath,
                             uint32_t ImgWidth, uint32_t ImgHeight)
@@ -184,15 +186,17 @@ Result GestureDetect::Process() {
     int image_num = 0;
     clock_t start_time = clock();
     for (;;image_num++) {
+        image_num %= 100;
         std::cout<<image_num<<std::endl;
 
-        image_num %= 100;
         // 图像文件的路径
         string imageFile = "../data/" + to_string(image_num) + ".jpg";
         const char* tmp = imageFile.data();
         std::cout<<tmp<<std::endl;
+
         // 检查该文件是否存在
         if ((access(tmp, 0)) == -1) {
+            std::cout<<"image not accessed"<<image_num<<tmp<<std::endl;
             break;
             image_num--;
             std::cout<<"image_num-- "<<std::endl;
@@ -208,6 +212,7 @@ Result GestureDetect::Process() {
         if (read_result == FAILED) {
             continue;
         }
+
         if (image.data == nullptr) {
             ERROR_LOG("Read image %s failed", imageFile.c_str());
             return FAILED;
@@ -224,6 +229,11 @@ Result GestureDetect::Process() {
         aclmdlDataset* inferenceOutput = nullptr;
         // 推理时间
         clock_t infer_time = clock();
+        std::cout<<"resized width "<<resizedImage.width<<std::endl;
+        std::cout<<"resized height "<<resizedImage.height<<std::endl;
+//        cv::Mat mat((int)resizedImage.width,(int)resizedImage.height,CV_8UC3,resizedImage.data);
+//        std::cout<<"resized image data"<<mat<<std::endl;
+
         ret = OpenposeModel_.Inference(inferenceOutput, resizedImage);
         if ((ret != SUCCESS) || (inferenceOutput == nullptr)) {
             ERROR_LOG("Inference model inference output data failed");
@@ -241,12 +251,11 @@ Result GestureDetect::Process() {
         unlink(pre_img);
 
         clock_t pose_time = clock();
-
         // 解析OpenPose推理输出
-        ret = OpenposeModel_.Postprocess(image, inferenceOutput, motion_data_new);
+//        ret = OpenposeModel_.Postprocess(image, inferenceOutput, motion_data_new);
         success_num++;
         if (ret != SUCCESS) {
-            std::cout<<"Hello"<<std::endl;
+            INFO_LOG("OpenPose Postprocess failed");
             continue;
         }
 

@@ -16,7 +16,7 @@
 int IMG_NUM;
 int file_num = 0;
 int LAST_GES = -1;
-float temp_key_points[2][14] = {0};
+float temp_key_points[2][18] = {0};
 Eigen::MatrixXf left_matrix(16, 16);
 Eigen::MatrixXf right_matrix(16, 16);
 Eigen::MatrixXf top_matrix(16, 16);
@@ -83,7 +83,10 @@ Result OpenPoseProcess::Preprocess(DvppProcess& dvpp, ImageData& resizedImage, I
 }
 
 Result OpenPoseProcess::Inference(aclmdlDataset*& inferenceOutput, ImageData& resizedImage) {
-    Result ret = CreateInput(resizedImage.data.get(), resizedImage.size); //, imageInfoBuf_, imageInfoSize_
+//    cv::imwrite("test-resized",resizedImage);
+//    std::cout<<"h"<<resizedImage.height<<"w"<<resizedImage.width<<std::endl;
+    Result ret = CreateInput(resizedImage.data.
+    get(), resizedImage.size); //, imageInfoBuf_, imageInfoSize_
     if (ret != SUCCESS) {
         ERROR_LOG("Create mode input dataset failed");
         return FAILED;
@@ -108,7 +111,8 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
     float* newresult = (float *)GetInferenceOutputItem(dataSize, modelOutput, 1);
 //    float* newresult1 = (float *)GetInferenceOutputItem(dataSize, modelOutput, 0);
 //
-    std::cout<<newresult[1]<<std::endl;
+//    std::cout<<newresult[1]<<std::endl;
+//    std::cout<<"heatmap length"<<sizeof(newresult)/sizeof(newresult[0])<<std::endl;
 //    std::cout<<*newresult1<<std::endl;
     cv::Mat temp_mat;
     cv::Mat temp_mat_0;
@@ -129,7 +133,7 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
 
 
     vector <float> one_pic_peaks;
-    float temp_key_points[2][14];
+    float temp_key_points[2][18]; // float temp_key_points[2][14];;
     int all_peak_index = 0;
     //最大分数
     float temp_aa;
@@ -147,14 +151,16 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
         Eigen::Matrix <float, 16, 16> m = matrQQ;
         // 先找16x16的最大数值的下标，temp_aa是最大值的数值
         temp_aa = m.maxCoeff(&maxRow_F, &maxCol_F);
+
+//        std::cout<<"temp_aa "<<temp_aa<<std::endl;
         // 最大值都不大于0.1，认为本帧图像无效
         // 特殊处理掉,todo
-        if (temp_aa < 0.1) {
-            if_valid = false;
-            //            cout << "Key point Index ======================== " << pic_num << endl;
-            //            continue;
-            break;
-        }
+//        if (temp_aa < 0.1) {
+//            if_valid = false;
+//            std::cout << "Key point Index ======================== " << pic_num << std::endl; //
+//            continue; //
+//            break;
+//        }
 
         // 获取矩阵左移的矩阵
         //与torch相同
@@ -225,9 +231,11 @@ Result OpenPoseProcess::Postprocess(ImageData& image, aclmdlDataset* modelOutput
 
         // 如果有一个部位一个点都没找到，人体缺失一个关键点，就不往下继续找了
         //这里要改
-        if (one_pic_key_points.size() == 0) {
-            return FAILED;
-        }
+//        if (one_pic_key_points.size() == 0) {
+//            std::cout<<"one_pic_key_points.size == 0"<<std::endl;
+//            return FAILED;
+//        }
+
         // 每张图计算出的keypoints存到一个vector，然后vector再存入总的keypoints
         //all_key_points是vector<key_pointsT>的vector
         all_key_points.push_back(one_pic_key_points);
