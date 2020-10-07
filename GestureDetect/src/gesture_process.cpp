@@ -125,7 +125,8 @@ Result GestureProcess::Postprocess(aclmdlDataset* modelOutput){
 //            break;
 //        }
 //    }
-//
+//  resultImage = resultImage * 255;
+    //    SendImage(resultImage);
     return SUCCESS;
 }
 

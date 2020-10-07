@@ -1,32 +1,28 @@
-//
-// Created by mind on 10/2/20.
-//
+
 #include "model_process.h"
 #include "utils.h"
 #include "pose_process.h"
 #include "acl/acl.h"
 #include <cstddef>
 #include <cmath>
-//#include <Eigen/Core>
-//#include <Eigen/Dense>
-#include "eigen3/Eigen/Core"
-#include "eigen3/Eigen/Dense"
-#include "opencv2/highgui.hpp"
-#include "opencv2/core/eigen.hpp"
-#include "opencv2/imgproc.hpp"
 
+//#include "eigen3/Eigen/Core"
+#include <eigen3/Eigen/Dense>
+
+#include "opencv2/opencv.hpp"
+#include "opencv2/imgcodecs/legacy/constants_c.h"
+#include "opencv2/imgproc/types_c.h"
+#include "opencv2/core/hal/interface.h"
+#include "opencv2/core/types.hpp"
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/opencv.hpp"
+#include <opencv2/core/eigen.hpp>
 
 int IMG_NUM;
 int file_num = 0;
 int LAST_GES = -1;
 float temp_key_points[2][18] = {0};
-Eigen::MatrixXf left_matrix(23, 16);
-Eigen::MatrixXf right_matrix(23, 16);
-Eigen::MatrixXf top_matrix(23, 16);
-Eigen::MatrixXf bottom_matrix(23, 16);
-Eigen::MatrixXf thre(23, 16);
-//Eigen::MatrixXf thre_2(10, 1);
-Eigen::MatrixXf thre_result(23, 16);
+
 
 int limbSeq[19][2] = {{2,3}, {2,6}, {3,4}, {4, 5}, {6, 7}, {7, 8}, {2, 9}, {9, 10}, {10, 11}, {2, 12},
 {12, 13}, {13, 14}, {2, 1}};
@@ -46,7 +42,12 @@ OpenPoseProcess::OpenPoseProcess() : ModelProcess() {}
 //    DestroyDesc();
 //    DestroyInput();
 //    DestroyOutput();
+//
+//
 //}
+
+
+
 
 int find_index(vector<int>::iterator begin, vector<int>::iterator end, int element){
     auto temp = begin;
@@ -65,9 +66,8 @@ bool cmp2(connectionT a,connectionT b) {
     return a.score>b.score;
 }
 
-Result OpenPoseProcess::Preprocess(void*& inputBuf_, cv::Mat& srcImage,uint32_t inputDataSize)
+int OpenPoseProcess::Preprocess(void*& inputBuf_, cv::Mat& srcImage,uint32_t inputDataSize)
 {
-
     cv::Mat singlec;
     cv::Mat reiszedImage;
     vector<cv::Mat> channels;
@@ -78,22 +78,18 @@ Result OpenPoseProcess::Preprocess(void*& inputBuf_, cv::Mat& srcImage,uint32_t 
     int nn_width = new_width + new_width % 8;
     Eigen::Matrix <float, 184, 128> padded_matrix;
     //Eigen::Matrix<float,184,Eigen::Dynamic>padded_matrix;
-    cv::resize(srcImage, srcImage, cv::Size(184, new_width), cv::INTER_CUBIC);\
-   // std::cout<<srcImage.cols<<" "<<srcImage.rows<<std::endl;
+    cv::resize(srcImage, srcImage, cv::Size(184, new_width), cv::INTER_CUBIC);
     cv::split(srcImage, channels);
-    //std::cout<<"channels.size : "<<channels.size()<<std::endl;
-    std::cout<<"new_width: "<<new_width<<std::endl;
+
     for (int i = 0; i < 3; i++)
     {
+        int j = 0;
         singlec = channels.at(i);
-        std::cout<<"singlec: "<<singlec.size<<std::endl;
         cv::cv2eigen(singlec, resize_matrix);
-        std::cout<<"resized matrix size: "<<resize_matrix.size()<<std::endl;
         padded_matrix.leftCols(new_width)= resize_matrix.leftCols(new_width);
-        for (int j = 0; j + new_width < nn_width; j++)
+        for (j = 0; j + new_width < nn_width; j++)
         {
             padded_matrix.col(j)= Eigen::MatrixXf::Zero(184, 1);
-            std::cout<<padded_matrix.col(j)<<std::endl;
         }
         cv::Mat tempmat;
         cv::eigen2cv(padded_matrix, tempmat);
@@ -102,16 +98,16 @@ Result OpenPoseProcess::Preprocess(void*& inputBuf_, cv::Mat& srcImage,uint32_t 
     cv::merge(new_channels, reiszedImage);
 
     memcpy(inputBuf_, reiszedImage.ptr<uint8_t>(), inputDataSize);
-    return SUCCESS; //nn_width; // resized_width
+    return nn_width; // resized_width
 
 }
 
 Result OpenPoseProcess::Inference(aclmdlDataset*& inferenceOutput, cv::Mat& image) {
-    //    Result ret = CreateInput(resizedImage.data.get(), resizedImage.size); //, imageInfoBuf_, imageInfoSize_
-    //    if (ret != SUCCESS) {
-    //        ERROR_LOG("Create mode input dataset failed");
-    //        return FAILED;
-    //    }
+//    Result ret = CreateInput(resizedImage.data.get(), resizedImage.size); //, imageInfoBuf_, imageInfoSize_
+//    if (ret != SUCCESS) {
+//        ERROR_LOG("Create mode input dataset failed");
+//        return FAILED;
+//    }
 
     Result ret = Execute();
     if (ret != SUCCESS) {
@@ -125,34 +121,40 @@ Result OpenPoseProcess::Inference(aclmdlDataset*& inferenceOutput, cv::Mat& imag
 }
 
 
+Result OpenPoseProcess::Postprocess(int resized_width, aclmdlDataset* modelOutput, std::shared_ptr<EngineTransNewT> motion_data_new) {
 
-Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<EngineTransNewT> motion_data_new) {
+	//int feature_width = resized_width / 8;
 
     uint32_t dataSize = 0;
     // 获取第2个输出，那么这个输出是heatmap
     float* newresult = (float *)GetInferenceOutputItem(dataSize, modelOutput, 1);
-//    float* newresult1 = (float *)GetInferenceOutputItem(dataSize, modelOutput, 0);
-//
-    std::cout<<newresult[1]<<std::endl;
-//    std::cout<<*newresult1<<std::endl;
+
     cv::Mat temp_mat;
     cv::Mat temp_mat_0;
     cv::Mat temp_mat_1;
-    // 那么输入是128*128
+
     Eigen::Matrix <float, 184, 128> resized_matrix;
+    //Eigen::Matrix<float,184,Eigen::Dynamic>resized_matrix;
     //与连接有关的图
     Eigen::Matrix <float, 184, 128> score_mid_0;
     Eigen::Matrix <float, 184, 128> score_mid_1;
+    //Eigen::Matrix <float, 184, Eigen::Dynamic> score_mid_0;
+    //Eigen::Matrix <float, 184, Eigen::Dynamic> score_mid_1;
+
     Eigen::MatrixXd::Index maxRow, maxCol;
     // 输出中分值最高的点的坐标
     Eigen::MatrixXd::Index maxRow_F, maxCol_F;
     Eigen::MatrixXd::Index maxRow_new, maxCol_new;
     Eigen::MatrixXd::Index temp_maxRow, temp_maxCol;
 
+	//寻找局部最大值
+	Eigen::MatrixXf left_matrix(23, 16);
+	Eigen::MatrixXf right_matrix(23, 16);
+	Eigen::MatrixXf top_matrix(23, 16);
+	Eigen::MatrixXf bottom_matrix(23, 16);
+
     vector <key_pointsT> one_pic_key_points;
     vector <vector<key_pointsT>> all_key_points;
-
-
     vector <float> one_pic_peaks;
     float temp_key_points[2][18];
     int all_peak_index = 0;
@@ -165,13 +167,13 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
         // ???
         float *v = newresult + pic_num * 256;
         // 按照列映射到Matrix
-        //martQQ是
-        //Eigen::MatrixXf是动态大小的矩阵
+        //Eigen::Map<Eigen::MatrixXf> matrQQ(v, 23, feature_width);
         Eigen::Map<Eigen::MatrixXf> matrQQ(v, 23, 16);
-        // m是16*16的矩阵
-        Eigen::Matrix <float, 16, 16> m = matrQQ;
+        Eigen::Matrix <float, 23, 16> m = matrQQ;
+        //Eigen::Matrix <float, 23,Eigen::Dynamic> m = matrQQ;
         // 先找16x16的最大数值的下标，temp_aa是最大值的数值
         temp_aa = m.maxCoeff(&maxRow_F, &maxCol_F);
+		std::cout << temp_aa << std::endl;
         // 最大值都不大于0.1，认为本帧图像无效
         // 特殊处理掉,todo
         if (temp_aa < 0.1) {
@@ -184,15 +186,15 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
         // 获取矩阵左移的矩阵
         //与torch相同
         left_matrix.leftCols(15) = m.rightCols(15);
-        left_matrix.col(15) = Eigen::MatrixXf::Zero(16, 1);
+        left_matrix.col(15) = Eigen::MatrixXf::Zero(15);
         // 右移
         right_matrix.rightCols(15) = m.leftCols(15);
         right_matrix.col(0) = Eigen::MatrixXf::Zero(16, 1);
         // 上移
-        top_matrix.topRows(23) = m.bottomRows(23);
-        top_matrix.row(23) = Eigen::MatrixXf::Zero(1, 23);
+        top_matrix.topRows(22) = m.bottomRows(22);
+        top_matrix.row(22) = Eigen::MatrixXf::Zero(1, 23);
         // 下移
-        bottom_matrix.bottomRows(23) = m.topRows(23);
+        bottom_matrix.bottomRows(22) = m.topRows(22);
         bottom_matrix.row(0) = Eigen::MatrixXf::Zero(1, 23);
         // 寻找16x16大小的局部最大值
         //像素减去它右边像素的值
@@ -230,7 +232,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
                 temp_maxCol = 0;
             }
             if (temp_maxRow > 177) {
-                temp_maxRow = 121;
+                temp_maxRow = 177;
             }
             if (temp_maxCol > 121) {
                 temp_maxCol = 121;
@@ -250,9 +252,9 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
 
         // 如果有一个部位一个点都没找到，人体缺失一个关键点，就不往下继续找了
         //这里要改
-        if (one_pic_key_points.size() == 0) {
-            return FAILED;
-        }
+        //if (one_pic_key_points.size() == 0) {
+          //  return FAILED;
+       // }
         // 每张图计算出的keypoints存到一个vector，然后vector再存入总的keypoints
         //all_key_points是vector<key_pointsT>的vector
         all_key_points.push_back(one_pic_key_points);
@@ -261,10 +263,10 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
     }
 
     // 只要有一个点找不到
-    if (!if_valid) {
-        cout << "invalid image!!" << endl;
-        return FAILED;
-    }
+  //  if (!if_valid) {
+       // cout << "invalid image!!" << endl;
+       // return FAILED;
+    //}
     // 到此为止，已经有了所有的关键点了
 
     // =======================================================================
@@ -273,6 +275,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
     // 获取第一个输出数据，这个是表示连接是输出
     vector <connectionT> connection_candidate;
     vector <vector<connectionT>> connection_all;
+	vector<int> missing_con;
     float* newresult_0 = (float *)GetInferenceOutputItem(dataSize, modelOutput, 0);
 
     // 遍历mapIdx
@@ -306,7 +309,8 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
         int LA = temp_A.size();
         int LB = temp_B.size();
 
-        if (LA != 0 && LB != 0) {
+        if (LA != 0 && LB != 0)
+		{
             // 寻找la中每一个点与lb中关键点之间连接的可能性
             for (int aa = 0; aa < LA; aa++) {
                 for (int bb = 0; bb < LB; bb++) {
@@ -407,6 +411,9 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
             connection_all.push_back(one_connection);
             one_connection.clear();
         }
+		else {
+		missing_con.push_back(kk);
+}
     }//这里，已经把所有的连接关系都找到了
 
     // =======================================================================
@@ -417,6 +424,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
     //
     vector<human> subset;
     for (int k = 0; k < 19; k++) {
+		if (count(missing_con.begin(), missing_con.end(), k)) continue;
         vector<connectionT>temp_con = connection_all[k];
         //我的partAs里面要放第k种连接的全局序号
         vector<int> partAs;
@@ -496,14 +504,15 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
     int maxscore = -1;
     int best_id = -1;
     for (int h = 0; h < subset.size(); h++) {
-//        if (subset[h].flag < 0) continue;
-//        if (subset[h].keynum < 18 || subset[h].allscore / 18 < 0.4) continue;
+        if (subset[h].flag < 0) continue;
+        if (subset[h].keynum < 4 || subset[h].allscore / 18 < 0.4) continue;
         if (subset[h].allscore > maxscore)
         {
             maxscore = subset[h].allscore;
             best_id = h;
         }
     }
+	if (best_id == -1) return FAILED;
     // 找全局序号
     int temp_index[18] = { -1 };
     for (int aa = 0; aa < 18; aa++) {
@@ -575,7 +584,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset* modelOutput, std::shared_ptr<
         {
             // data[0][0][t][v]是第t张图的第v个关节的x轴坐标
             skeleton_center[c][t] = float((motion_data_new->data[0][c][t][1] + motion_data_new->data[0][c][t][8] + motion_data_new->data[0][c][t][11]) / float(3.0));
-            for (int v = 0; v < 14; v++)
+            for (int v = 0; v < 18; v++)
             {
                 motion_data_new->data[0][c][t][v] = motion_data_new->data[0][c][t][v] - skeleton_center[c][t];
             }

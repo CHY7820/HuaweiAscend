@@ -162,73 +162,77 @@ void* Utils::CopyDataHostToDevice(void* deviceData, uint32_t dataSize) {
     return CopyDataToDevice(deviceData, dataSize, ACL_MEMCPY_HOST_TO_DEVICE);
 }
 
-Result Utils::CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode) {
-    void * buffer;
-    if (mode == ACL_HOST)
-        buffer = Utils::CopyDataHostToDevice(srcImage.data.get(), srcImage.size);
-    else
-        buffer = Utils::CopyDataDeviceToDevice(srcImage.data.get(), srcImage.size);
-
-    if (buffer == nullptr) {
-        ERROR_LOG("Copy image to device failed");
-        return FAILED;
-    }
-
-    imageDevice.width = srcImage.width;
-    imageDevice.height = srcImage.height;
-    imageDevice.size = srcImage.size;
-    imageDevice.data.reset((uint8_t*)buffer, [](uint8_t* p) { aclrtFree((void *)p); });
-
-    return SUCCESS;
-}
-
-int Utils::ReadImageFile(ImageData& image, std::string fileName)
-{
-    //uint32_t width = 0, height = 0;
-    //GetJPEGWidthHeight(fileName.c_str(), &width, &height);
-    //INFO_LOG("jpeg width %d, height %d", width, height);
-
-    struct stat sBuf;
-    int fileStatus = stat(fileName.data(), &sBuf);
-    if (fileStatus == -1) {
-        ERROR_LOG("failed to get file");
-        return FAILED;
-    }
-    if (S_ISREG(sBuf.st_mode) == 0) {
-        ERROR_LOG("%s is not a file, please enter a file", fileName.c_str());
-        return FAILED;
-    }
-    std::ifstream binFile(fileName, std::ifstream::binary);
-    if (binFile.is_open() == false) {
-        ERROR_LOG("open file %s failed", fileName.c_str());
-        return FAILED;
-    }
-
-    binFile.seekg(0, binFile.end);
-    uint32_t binFileBufferLen = binFile.tellg();
-//    cout << "binFileBufferLen   " << binFileBufferLen << endl;
-    if (binFileBufferLen == 0) {
-//        ERROR_LOG("binfile is empty, filename is %s", fileName.c_str());
-        binFile.close();
-        return FAILED;
-    }
-
-    binFile.seekg(0, binFile.beg);
-
-    uint8_t* binFileBufferData = new(std::nothrow) uint8_t[binFileBufferLen];
-    if (binFileBufferData == nullptr) {
-        ERROR_LOG("malloc binFileBufferData failed");
-        binFile.close();
-        return FAILED;
-    }
-    binFile.read((char *)binFileBufferData, binFileBufferLen);
-    binFile.close();
-
-    int32_t ch = 0;
-    acldvppJpegGetImageInfo(binFileBufferData, binFileBufferLen,
-              &(image.width), &(image.height), &ch);
-    image.data.reset(binFileBufferData, [](uint8_t* p) { delete[](p); });
-    image.size = binFileBufferLen;
-
-    return SUCCESS;
-}
+//Result Utils::CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode) {
+//    void * buffer;
+//    if (mode == ACL_HOST)
+//        buffer = Utils::CopyDataHostToDevice(srcImage.data.get(), srcImage.size);
+//    else
+//        buffer = Utils::CopyDataDeviceToDevice(srcImage.data.get(), srcImage.size);
+//
+//    if (buffer == nullptr) {
+//        ERROR_LOG("Copy image to device failed");
+//        return FAILED;
+//    }
+//
+//    imageDevice.width = srcImage.width;
+//    imageDevice.height = srcImage.height;
+//    imageDevice.size = srcImage.size;
+//    imageDevice.data.reset((uint8_t*)buffer, [](uint8_t* p) { aclrtFree((void *)p); });
+//
+//    return SUCCESS;
+//}
+//
+//int Utils::ReadImageFile(ImageData& image, std::string fileName)
+//{
+//    //uint32_t width = 0, height = 0;
+//    //GetJPEGWidthHeight(fileName.c_str(), &width, &height);
+//    //INFO_LOG("jpeg width %d, height %d", width, height);
+//
+//    struct stat sBuf;
+//    int fileStatus = stat(fileName.data(), &sBuf);
+//    if (fileStatus == -1) {
+//        ERROR_LOG("failed to get file");
+//        return FAILED;
+//    }
+//    if (S_ISREG(sBuf.st_mode) == 0) {
+//        ERROR_LOG("%s is not a file, please enter a file", fileName.c_str());
+//        return FAILED;
+//    }
+//    std::ifstream binFile(fileName, std::ifstream::binary);
+//    if (binFile.is_open() == false) {
+//        ERROR_LOG("open file %s failed", fileName.c_str());
+//        return FAILED;
+//    }
+//
+//    binFile.seekg(0, binFile.end);
+//    uint32_t binFileBufferLen = binFile.tellg();
+////    cout << "binFileBufferLen   " << binFileBufferLen << endl;
+//    if (binFileBufferLen == 0) {
+////        ERROR_LOG("binfile is empty, filename is %s", fileName.c_str());
+//        binFile.close();
+//        return FAILED;
+//    }
+//
+//    binFile.seekg(0, binFile.beg);
+//
+//    uint8_t* binFileBufferData = new(std::nothrow) uint8_t[binFileBufferLen];
+//    if (binFileBufferData == nullptr) {
+//        ERROR_LOG("malloc binFileBufferData failed");
+//        binFile.close();
+//        return FAILED;
+//    }
+//    binFile.read((char *)binFileBufferData, binFileBufferLen);
+//    binFile.close();
+//
+//    int32_t ch = 0;
+//    acldvppJpegGetImageInfo(binFileBufferData, binFileBufferLen,
+//              &(image.width), &(image.height), &ch);
+//    image.data.reset(binFileBufferData, [](uint8_t* p) { delete[](p); });
+//    image.size = binFileBufferLen;
+//
+//    return SUCCESS;
+//}
+//int Utils::ReadImageFile(std::string fileName)
+//{
+//
+//}

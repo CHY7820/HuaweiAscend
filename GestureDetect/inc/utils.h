@@ -41,8 +41,8 @@ using namespace std;
 #define ALIGN_UP16(num) ALIGN_UP(num, 16)
 #define ALIGN_UP128(num) ALIGN_UP(num, 128)
 
-#define SHARED_PRT_DVPP_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { acldvppFree(p); }))
-#define SHARED_PRT_U8_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { delete[](p); }))
+//#define SHARED_PRT_DVPP_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { acldvppFree(p); }))
+//#define SHARED_PRT_U8_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { delete[](p); }))
 
 #define FRAME_LENGTH 30
 #define PEOPLE_MOST 10
@@ -72,14 +72,8 @@ struct Resolution {
     uint32_t height = 0;
 };
 
-struct ImageData {
-    uint32_t width = 0;
-    uint32_t height = 0;
-    uint32_t alignWidth = 0;
-    uint32_t alignHeight = 0;
-    uint32_t size = 0;
-    std::shared_ptr<uint8_t> data;
-};
+
+
 
 struct Rect {
     uint32_t ltX = 0;
@@ -96,6 +90,7 @@ typedef struct key_points{
 	float score;
     int num;
 } key_pointsT;
+
 
 
 typedef struct connection{
@@ -162,7 +157,7 @@ public:
     static void* CopyDataDeviceToLocal(void* deviceData, uint32_t dataSize);
     static void* CopyDataHostToDevice(void* deviceData, uint32_t dataSize);
     static void* CopyDataDeviceToDevice(void* deviceData, uint32_t dataSize);
-    static int ReadImageFile(ImageData& image, std::string fileName);
-    static Result CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode);
+//    static int ReadImageFile(ImageData& image, std::string fileName);
+//    static Result CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode);
 };
 

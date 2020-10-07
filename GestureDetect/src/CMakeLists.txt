@@ -14,7 +14,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "-fPIC -O0 -g -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "-fPIC -O2 -Wall")
 
 add_definitions(-DENABLE_DVPP_INTERFACE)
-set(INC_PATH $ENV{DDK_PATH})
+# set(INC_PATH $ENV{DDK_PATH})
+# set(LIB_PATH $ENV{NPU_HOST_LIB})
+set(INC_PATH "/home/mind/Ascend/ascend-toolkit/20.0.RC1/acllib_centos7.6.aarch64")
+set(LIB_PATH "/home/mind/Ascend/ascend-toolkit/20.0.RC1/acllib_centos7.6.aarch64/acllib/lib64/stub")
 
 if (NOT DEFINED ENV{DDK_PATH})
     set(INC_PATH "/usr/local/Ascend")
@@ -23,11 +26,7 @@ else ()
     message(STATUS "env INC_PATH: ${INC_PATH}")
 endif()
 
-find_package(Eigen3 REQUIRED)
 
-
-
-set(LIB_PATH $ENV{NPU_HOST_LIB})
 
 if (NOT DEFINED ENV{NPU_HOST_LIB})
     set(LIB_PATH "/usr/local/Ascend/acllib/lib64/stub/")
@@ -37,12 +36,10 @@ else ()
 endif()
 
 # Header path
-# message(STATUS ${EIGEN3_INCLUDE_DIRS})
 include_directories(
     $ENV{HOME}/ascend_ddk/arm/include/
     $ENV{HOME}/ascend_ddk/arm/include/opencv4
     ${INC_PATH}/acllib/include/
-    ${EIGEN3_INCLUDE_DIRS}
     ../inc/
 )
 
@@ -59,9 +56,6 @@ link_directories(
 
 add_executable(main
         utils.cpp
-        dvpp_process.cpp
-        dvpp_resize.cpp
-        dvpp_jpegd.cpp
         model_process.cpp
         pose_process.cpp
         gesture_process.cpp
@@ -71,7 +65,6 @@ add_executable(main
 if(target STREQUAL "Simulator_Function")
     target_link_libraries(main funcsim)
 else()
-    target_link_libraries(main ascendcl stdc++ acl_dvpp opencv_core opencv_imgproc opencv_imgcodecs dl rt)
-endif()
+    target_link_libraries(main ascendcl stdc++ ascendcl acl_dvpp stdc++ opencv_highgui opencv_core opencv_imgproc opencv_imgcodecs opencv_calib3d opencv_features2d opencv_videoio protobuf presenteragent dl rt)
 
-install(TARGETS main DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()

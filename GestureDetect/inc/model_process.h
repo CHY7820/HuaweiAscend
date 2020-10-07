@@ -98,12 +98,12 @@ public:
     void* GetInferenceOutputItem(uint32_t& itemDataSize,
     aclmdlDataset* inferenceOutput, uint32_t idx);
 
-    void set_runmode(aclrtRunMode runMode) { runMode_ = runMode; }
+//    void set_runmode(aclrtRunMode runMode) { runMode_ = runMode; }
     void set_modelId(uint32_t modelId) { modelId_ = modelId; }
 
 protected:
     uint32_t modelId_;
-    aclrtRunMode runMode_;
+//    aclrtRunMode runMode_;
 
 private:
     size_t modelMemSize_;
