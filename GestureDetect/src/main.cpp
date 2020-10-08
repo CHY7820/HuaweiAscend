@@ -16,11 +16,11 @@ bool g_isDevice = false;
 
 
 namespace {
-const char* kOpenPoseModelPath = "../model/openpose0.om";
-const char* kGestureModelPath = "../model/stgcn_simple.om";
+const char* kOpenPoseModelPath = "../model/openpose.om";
+const char* kGestureModelPath = "../model/stgcn.om";
 const std::string kImageDir = "../data/";
-uint32_t ImgWidth = 128;
-uint32_t ImgHeight = 128;
+uint32_t ImgWidth = 160;
+uint32_t ImgHeight = 120;
 }
 
 int main()

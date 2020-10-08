@@ -2,7 +2,6 @@
 
 #include "gesture_process.h"
 #include "pose_process.h"
-#include "ascenddk/presenter/agent/channel.h"
 #include "utils.h"
 #include "acl/acl.h"
 
@@ -20,9 +19,7 @@ private:
     Result InitResource();
     Result InitModel(const char* OpenPoseModelPath, const char* GestureModelPath);
     Result ProcessMotionData();
-    void EncodeImage(vector<uint8_t>& encodeImg, cv::Mat& origImg);
-    Result SendImage(cv::Mat& image);
-    Result OpenPresenterChannel();
+
 
     OpenPoseProcess OpenposeModel_;
     GestureProcess GestureModel_;
@@ -35,9 +32,8 @@ private:
     const char* OpenPoseModelPath_;
     const char* GestureModelPath_;
 
-    const int FRAMES = 50;
     bool isInited_;
-    ascend::presenter::Channel* channel_;
+
 
     aclmdlDataset* input_;
     aclmdlDataset* output_;

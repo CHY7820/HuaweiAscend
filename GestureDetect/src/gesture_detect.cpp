@@ -18,9 +18,11 @@
 
 #define RGBF32_CHAN_SIZE(width, height) ((width) * (height) * 3)
 
+using namespace std;
+
 GestureDetect::GestureDetect(const char* kOpenPoseModelPath,const char* kGestureModelPath,
                             uint32_t ImgWidth, uint32_t ImgHeight)
-: deviceId_(0),context_(nullptr),stream_(nullptr),channel_(nullptr),
+: deviceId_(0),context_(nullptr),stream_(nullptr),
 isInited_(false),OpenPoseModelPath_(kOpenPoseModelPath), GestureModelPath_(kGestureModelPath) {
     OpenposeModel_.set_modelId(0);
 //    OpenposeModel_.set_modelsize(ImgWidth,ImgHeight);
@@ -149,9 +151,9 @@ Result GestureDetect::Init() {
 }
 
 Result GestureDetect::ProcessMotionData() {
-    float temp_left = 128;
+    float temp_left = 120;
     float temp_right = 0;
-    float temp_top = 184;
+    float temp_top = 160;
     float temp_bottom = 0;
     float total_left = 0;
     float total_right = 0;
@@ -177,12 +179,21 @@ Result GestureDetect::Process() {
     int success_num = -4;
     int image_num = 0;
     clock_t start_time = clock();
+
+    shared_ptr<ImageDesc> image_desc = nullptr;
+    MAKE_SHARED_NO_THROW(image_desc, ImageDesc);
+
+    if (image_desc == nullptr) {
+        ERROR_LOG("Failed to MAKE_SHARED_NO_THROW for ImageDesc.");
+        return FAILED;
+    }
+
+
     for (;;image_num++) {
         std::cout<<"image num: "<<image_num<<std::endl;
-
-        image_num %= 300;
+        image_num %= FRAME_LENGTH;
         // 图像文件的路径
-        string imageFile = "../data/frames/" + to_string(image_num) + ".jpg";
+        std::string imageFile = "../data/frames/" + to_string(image_num) + ".jpg";
         const char* tmp = imageFile.data();
         std::cout<<"image path: "<<tmp<<std::endl;
         // 检查该文件是否存在
@@ -192,42 +203,42 @@ Result GestureDetect::Process() {
             std::cout<<"image_num-- "<<std::endl;
             // 如果一秒30帧，平均一帧是0.033s，等待0.04s，差不多下一帧就到了
             usleep(40000);
-//            continue;
+            // continue;
         }
 
-        // 读取图片时间
         clock_t read_time = clock();
-        // 读取图像文件
+//        cout<<image_desc<<endl;
+//        cout<<image_desc.get()<<endl;
 
-        cv::Mat frame = cv::imread(imageFile,1); // 1. send this image to presenter server
-        std::cout<<"frame size : "<<frame.size<<std::endl; // width x height
-        cv::Mat processed_frame;
-//        SendImage(frame);
+        Result ret = OpenposeModel_.Preprocess(image_desc, imageFile); // resize and padding the frame
+//        printf("desc:%f\n",*(image_desc->data));
 
+        // create input for the model inference.
+        ret = OpenposeModel_.CreateInput((void*) image_desc->data.get(), image_desc->size);
+//        cout<<"size"<<image_desc->size<<endl;
+        if (ret != SUCCESS) {
+            ERROR_LOG("execute CreateInput failed");
+            return FAILED;
+        }
 
-
-//        std::cout<<frame<<std::endl;
-//        预处理图片:读取图片,讲图片缩放到模型输入要求的尺寸
-        Result ret = OpenposeModel_.Preprocess(frame,processed_frame); // resize and padding the frame
-
-    //    std::cout << "read time " << double(clock() - read_time) / CLOCKS_PER_SEC << std::endl;
         //将预处理的图片送入OpenPose模型推理,并获取OpenPose推理结果
-        aclmdlDataset* inferenceOutput = nullptr;
         // 推理时间
         clock_t infer_time = clock();
-        ret = OpenposeModel_.Inference(inferenceOutput, processed_frame);
+
+        OpenposeModel_.Execute();
+
+        std::cout << "infer time " << double(clock() - infer_time) / CLOCKS_PER_SEC << std::endl;
+
+        aclmdlDataset*inferenceOutput = OpenposeModel_.GetModelOutputData();
         if ((ret != SUCCESS) || (inferenceOutput == nullptr)) {
             ERROR_LOG("Inference model inference output data failed");
             return FAILED;
         }
-        std::cout << "infer time " << double(clock() - infer_time) / CLOCKS_PER_SEC << std::endl;
-
-
          //解析OpenPose推理输出
         ret = OpenposeModel_.Postprocess(inferenceOutput, motion_data_new);
         success_num++;
         if (ret != SUCCESS) {
-            std::cout<<"Postprocess not success"<<std::endl;
+            std::cout<<"Openpose Postprocess not success"<<std::endl;
             continue;
         }
         // 删除之前的图片
@@ -243,12 +254,9 @@ Result GestureDetect::Process() {
         clock_t pose_time = clock();
         std::cout << "pose_time time " << double(clock() - pose_time) / CLOCKS_PER_SEC << std::endl;
 
-
-
-
         // 每更新五帧进行一次动作识别
         if (success_num % 5 == 0) {
-            ProcessMotionData();
+            //ProcessMotionData();
             //SaveData();
             //将人体骨架序列送入Gesture模型推理,并获取400种动作的可能性
             aclmdlDataset* gestureOutput = nullptr;
@@ -262,7 +270,7 @@ Result GestureDetect::Process() {
             }
             std::cout << "ges_time time " << double(clock() - ges_time) / CLOCKS_PER_SEC << std::endl;
             // 数据后处理
-            ret = GestureModel_.Postprocess(gestureOutput);
+            ret = GestureModel_.Postprocess(imageFile,gestureOutput);
             if (ret != SUCCESS) {
                 ERROR_LOG("Process model inference output data failed");
                 // 退出程序
@@ -271,7 +279,6 @@ Result GestureDetect::Process() {
         }
 
     }
-
 
     return SUCCESS;
 }
@@ -311,54 +318,6 @@ void GestureDetect::DeInit() {
 //    aclrtFree(imageInfoBuf_);
 }
 
-void GestureDetect::EncodeImage(vector<uint8_t>& encodeImg, cv::Mat& origImg) {
-    vector<int> param = vector<int>(2);
-    //param[0] = CV_IMWRITE_JPEG_QUALITY;
-    param[0] = 95;
-    param[1] = 95;//default(95) 0-100
 
-    cv::imencode(".jpg", origImg, encodeImg, param);
-}
-
-
-Result GestureDetect::SendImage(cv::Mat& image) {
-    vector<uint8_t> encodeImg;
-    EncodeImage(encodeImg, image);
-
-    ascend::presenter::ImageFrame imageParam;
-    imageParam.format = ascend::presenter::ImageFormat::kJpeg;
-    imageParam.width = image.cols;
-    imageParam.height = image.rows;
-    imageParam.size = encodeImg.size();
-    imageParam.data = reinterpret_cast<uint8_t*>(encodeImg.data());
-
-    std::vector<ascend::presenter::DetectionResult> detectionResults;
-    imageParam.detection_results = detectionResults;
-
-    ascend::presenter::PresenterErrorCode errorCode = ascend::presenter::PresentImage(channel_, imageParam);
-    if (errorCode != ascend::presenter::PresenterErrorCode::kNone) {
-        ERROR_LOG("PresentImage failed %d", static_cast<int>(errorCode));
-        return FAILED;
-    }
-
-    return SUCCESS;
-}
-
-Result GestureDetect::OpenPresenterChannel() {
-    ascend::presenter::OpenChannelParam param;
-    param.host_ip = "192.168.1.134";  //IP address of Presenter Server
-    param.port = 7008;  //port of present service
-    param.channel_name = "colorization-video";
-    param.content_type = ascend::presenter::ContentType::kVideo;  //content type is Video
-    INFO_LOG("OpenChannel start");
-    ascend::presenter::PresenterErrorCode errorCode =ascend::presenter::OpenChannel(channel_, param);
-    INFO_LOG("OpenChannel param");
-    if (errorCode != ascend::presenter::PresenterErrorCode::kNone) {
-        ERROR_LOG("OpenChannel failed %d", static_cast<int>(errorCode));
-        return FAILED;
-    }
-
-    return SUCCESS;
-}
 
 

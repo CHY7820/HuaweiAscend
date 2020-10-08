@@ -11,8 +11,8 @@ class OpenPoseProcess : public ModelProcess
 {
 public:
     OpenPoseProcess();
-    Result Preprocess(cv::Mat& srcImage,cv::Mat& dstImage);
-    Result Inference(aclmdlDataset*& openposeOutput,cv::Mat& frame);
+    Result Preprocess(shared_ptr<ImageDesc>& imageData, const std::string& imageFile);
+  //  Result Inference(aclmdlDataset*& openposeOutput,std::vector<cv::Mat>& chwImage);
     Result Postprocess(aclmdlDataset*& openposeOutput, std::shared_ptr<EngineTransNewT> motion_data_new); // * or &
     void ProcessMotionData();
 
@@ -20,11 +20,9 @@ public:
 
 
 private:
-    // OpenPose model: (1,3,184,248) -- NCHW
-    uint32_t modelHeight_ = 120;//184;
-    uint32_t modelWidth_ = 160;//248;
-    uint32_t inputDataSize_ = 120*160*3; // in byte
+    // OpenPose model: (1,3,120,160) -- NCHW
+    uint32_t modelHeight_ = 120;
+    uint32_t modelWidth_ = 160;
 
-    // for openpose model taking input shape 128*128, output shape is 16*16
 
 };

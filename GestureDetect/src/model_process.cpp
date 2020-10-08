@@ -313,18 +313,6 @@ void* ModelProcess::GetInferenceOutputItem(uint32_t& itemDataSize, aclmdlDataset
     }
 
     void* data = dataBufferDev;
-//    void* data = nullptr;
-//    if (runMode_ == ACL_HOST) {
-//        data = Utils::CopyDataDeviceToLocal(dataBufferDev, bufferSize);
-//        if (data == nullptr) {
-//            ERROR_LOG("Copy inference output to host failed");
-//            return nullptr;
-//        }
-//    }
-//    else {
-//        data = dataBufferDev;
-//    }
-
     itemDataSize = bufferSize;
     return data;
 }

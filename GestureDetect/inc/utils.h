@@ -24,8 +24,13 @@
 #include <mutex>
 #include <unistd.h>
 #include <vector>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/Dense"
 #include "opencv2/highgui.hpp"
+#include "opencv2/core/eigen.hpp"
 #include "opencv2/imgproc.hpp"
+#include "opencv2/imgcodecs/legacy/constants_c.h"
+#include "opencv2/imgproc/types_c.h"
 #include "acl/acl.h"
 
 using namespace std;
@@ -35,19 +40,13 @@ using namespace std;
 #define ERROR_LOG(fmt, args...) fprintf(stdout, "[ERROR]  " fmt "\n", ##args)
 
 #define RGBU8_IMAGE_SIZE(width, height) ((width) * (height) * 3)
-#define RGBF32_IMAGE_SIZE(width,height) ((width)*(height)*3*4)
-#define YUV420SP_SIZE(width, height) ((width) * (height) * 3 / 2)
+#define RGB_IMAGE_SIZE_F32(width, height) ((width) * (height) * 3 * 4)
+#define IMAGE_CHAN_SIZE_F32(width, height) ((width) * (height) * 4)
 
-#define ALIGN_UP(num, align) (((num) + (align) - 1) & ~((align) - 1))
-#define ALIGN_UP2(num) ALIGN_UP(num, 2)
-#define ALIGN_UP16(num) ALIGN_UP(num, 16)
-#define ALIGN_UP128(num) ALIGN_UP(num, 128)
-
-//#define SHARED_PRT_DVPP_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { acldvppFree(p); }))
-//#define SHARED_PRT_U8_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { delete[](p); }))
 
 #define FRAME_LENGTH 50
 #define PEOPLE_MOST 10
+
 
 template<class Type>
 std::shared_ptr<Type> MakeSharedNoThrow() {
@@ -64,6 +63,7 @@ std::shared_ptr<Type> MakeSharedNoThrow() {
             memory = MakeSharedNoThrow<memory_type>(); \
     }while(0);
 
+
 typedef enum Result {
     SUCCESS = 0,
     FAILED = 1
@@ -74,6 +74,13 @@ struct Resolution {
     uint32_t height = 0;
 };
 
+struct ImageDesc {
+    uint32_t img_width = 0;
+    uint32_t img_height = 0;
+    int32_t size = 0;
+   // std::string input_path = "";
+    std::shared_ptr<float> data;
+};
 
 
 
@@ -134,6 +141,14 @@ struct BBox {
     string text;
 };
 
+const string gesture_labels[] = {"applauding","bending back","blowing nose","carrying baby",
+"celebrating","clapping","crawling baby","crying","drinking","exercising arm","headbanging",
+"headbutting","high kick","jogging","laughing","lunge","pull ups","punching person (boxing)",
+"push up","shaking hands","shaking head","side kick","sign language interpreting","singing",
+"situp","slapping","smoking","sneezing","sniffing","somersaulting","squat","stretching arm",
+"stretching leg","swinging legs","swinging on something","tai chi","tasting food","washing hands",
+"writing","yawning"};
+
 /**
  * Utils
  */
@@ -160,9 +175,7 @@ public:
     static void* CopyDataHostToDevice(void* deviceData, uint32_t dataSize);
     static void* CopyDataDeviceToDevice(void* deviceData, uint32_t dataSize);
 
-    static void hwc_to_chw(cv::InputArray src, cv::OutputArray dst);
-
-    static void chw_to_hwc(cv::InputArray src, cv::OutputArray dst);
+    static void ImageNchw(shared_ptr<ImageDesc>& imageData, std::vector<cv::Mat>& nhwcImageChs, uint32_t size);
 
     //    static int ReadImageFile(ImageData& image, std::string fileName);
 //    static Result CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode);

@@ -162,32 +162,42 @@ void* Utils::CopyDataHostToDevice(void* deviceData, uint32_t dataSize) {
     return CopyDataToDevice(deviceData, dataSize, ACL_MEMCPY_HOST_TO_DEVICE);
 }
 
-void hwc_to_chw(cv::InputArray src, cv::OutputArray dst) {
-    const int src_h = src.rows();
-    const int src_w = src.cols();
-    const int src_c = src.channels();
 
-    cv::Mat hw_c = src.getMat().reshape(1, src_h * src_w);
+void Utils::ImageNchw(shared_ptr<ImageDesc>& imageData, std::vector<cv::Mat>& nhwcImageChs, uint32_t size) {
+    float* nchwBuf = new float[size];
+    //int channelSize = IMAGE_CHAN_SIZE_F32(nhwcImageChs[0].rows, nhwcImageChs[0].cols);
+    int channelSize=sizeof(nchwBuf[0]);
+    int pos = 0;
+//    printf("%d\n", nhwcImageChs[i]);
+    for (int i = 0; i < nhwcImageChs.size(); i++) {
+//        printf("channel\n");
+//        printf("%f\n", *(nhwcImageChs[i].ptr<float>(0)));
+        memcpy(nchwBuf+ pos,  nhwcImageChs[i].ptr<float>(0), channelSize); //对于ptr来说只输入1个参数代码取第几行的地址
+//        printf("%f\n", *(nchwBuf+pos));
+        //        if(i==0)
+//        {
+//            for(int k=0;k<1;k++)
+//            {
+//                std::cout<<*(nchwBuf+k)<<std::endl;
+//            }
+//        } // ?
 
-    const std::array<int,3> dims = {src_c, src_h, src_w};
-    dst.create(3, &dims[0], CV_MAKETYPE(src.depth(), 1));
-    cv::Mat dst_1d = dst.getMat().reshape(1, {src_c, src_h, src_w});
+        pos += channelSize;
+    }
+//    std::cout<<"test"<<std::endl;
+   // printf("%d",*(nchwBuf));
+//    std::cout<<nchwBuf<<std::endl;
+//    std::cout<<"test"<<std::endl;
+    imageData->size = size;
+    imageData->data.reset((float *)nchwBuf, [](float* p) { delete[](p);} );
+//    printf("%f",*(imageData->data));
+//    for(int k=0;k<10;k++)
+//    {
+//        std::cout<<*(imageData->data.get()+k)<<std::endl;
+//    }
+    //std::cout<<"data addr: "<<(void*)imageData->data.get()<<std::endl;
+    //std::cout<<"nchwBuf addr: "<<(void*)nchwBuf<<std::endl;
 
-    cv::transpose(hw_c, dst_1d);
-}
-
-void chw_to_hwc(cv::InputArray src, cv::OutputArray dst) {
-    const auto& src_size = src.getMat().size;
-    const int src_c = src_size[0];
-    const int src_h = src_size[1];
-    const int src_w = src_size[2];
-
-    auto c_hw = src.getMat().reshape(0, {src_c, src_h * src_w});
-
-    dst.create(src_h, src_w, CV_MAKETYPE(src.depth(), src_c));
-    cv::Mat dst_1d = dst.getMat().reshape(src_c, {src_h, src_w});
-
-    cv::transpose(c_hw, dst_1d);
 }
 
 //Result Utils::CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode) {
