@@ -3,12 +3,13 @@
 
 import cv2
 import time
+import os
 # 传输图片
 import paramiko
 
 # 修改Atlas 200DK的IP以及要传输的目标位置
 Atlas_IP = "192.168.1.2"
-Atlas_path = "HIAI_PROJECTS/workspace_mind_studio/GestureDetect_e8aa832f$/data/"
+Atlas_path = "HIAI_PROJECTS/workspace_mind_studio/GestureDetect_e8aa832f/data/frames/"
 
 def read_capture():
     num = 0
@@ -27,8 +28,8 @@ def read_capture():
         # 读取图片
         img_np = frame.copy()
         # 图片保存的位置
-        os.mkdir("./frames") # 创建文件夹
-        img_path = '%s%d.jpg'%('./frames/', num)
+        # os.mkdir("../data/frames") # 创建文件夹
+        img_path = '%s%d.jpg'%('../data/frames/',num)
         cv2.imwrite(img_path, img_np)
         # 传输
         try:

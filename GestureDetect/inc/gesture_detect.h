@@ -2,8 +2,10 @@
 
 #include "gesture_process.h"
 #include "pose_process.h"
+#include "ascenddk/presenter/agent/channel.h"
 #include "utils.h"
 #include "acl/acl.h"
+
 
 class GestureDetect {
 public:
@@ -30,19 +32,14 @@ private:
     aclrtContext context_;
     aclrtStream stream_;
 
-//    uint32_t modelWidth_;
-//    uint32_t modelHeight_;
-    uint32_t inputDataSize_;
-    void* inputBuf_;
-//    aclrtRunMode runMode_;
     const char* OpenPoseModelPath_;
     const char* GestureModelPath_;
 
     const int FRAMES = 50;
     bool isInited_;
-//    Channel* channel_;
+    ascend::presenter::Channel* channel_;
 
-//    aclmdlDataset* input_;
-//    aclmdlDataset* output_;
+    aclmdlDataset* input_;
+    aclmdlDataset* output_;
     std::shared_ptr<EngineTransNewT> motion_data_new = std::make_shared<EngineTransNewT>();
 };

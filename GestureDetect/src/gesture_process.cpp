@@ -127,6 +127,7 @@ Result GestureProcess::Postprocess(aclmdlDataset* modelOutput){
 //    }
 //  resultImage = resultImage * 255;
     //    SendImage(resultImage);
+    std::cout<<"hello"<<std::endl;
     return SUCCESS;
 }
 

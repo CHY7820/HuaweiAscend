@@ -24,7 +24,8 @@
 #include <mutex>
 #include <unistd.h>
 #include <vector>
-
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 #include "acl/acl.h"
 
 using namespace std;
@@ -34,6 +35,7 @@ using namespace std;
 #define ERROR_LOG(fmt, args...) fprintf(stdout, "[ERROR]  " fmt "\n", ##args)
 
 #define RGBU8_IMAGE_SIZE(width, height) ((width) * (height) * 3)
+#define RGBF32_IMAGE_SIZE(width,height) ((width)*(height)*3*4)
 #define YUV420SP_SIZE(width, height) ((width) * (height) * 3 / 2)
 
 #define ALIGN_UP(num, align) (((num) + (align) - 1) & ~((align) - 1))
@@ -44,7 +46,7 @@ using namespace std;
 //#define SHARED_PRT_DVPP_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { acldvppFree(p); }))
 //#define SHARED_PRT_U8_BUF(buf) (shared_ptr<uint8_t>((uint8_t *)(buf), [](uint8_t* p) { delete[](p); }))
 
-#define FRAME_LENGTH 30
+#define FRAME_LENGTH 50
 #define PEOPLE_MOST 10
 
 template<class Type>
@@ -120,7 +122,7 @@ typedef struct EngineTransNew
 	// 倒数第二维是帧
 	// 正数第二维是x与y
 	// 那第一维应该是人？
-    float data [1][2][FRAME_LENGTH][18];
+    float data [1][3][FRAME_LENGTH][18];
     //    float data [2][30][14];
     size_t buffer_size;   // buffer size
 }EngineTransNewT;
@@ -157,7 +159,12 @@ public:
     static void* CopyDataDeviceToLocal(void* deviceData, uint32_t dataSize);
     static void* CopyDataHostToDevice(void* deviceData, uint32_t dataSize);
     static void* CopyDataDeviceToDevice(void* deviceData, uint32_t dataSize);
-//    static int ReadImageFile(ImageData& image, std::string fileName);
+
+    static void hwc_to_chw(cv::InputArray src, cv::OutputArray dst);
+
+    static void chw_to_hwc(cv::InputArray src, cv::OutputArray dst);
+
+    //    static int ReadImageFile(ImageData& image, std::string fileName);
 //    static Result CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode);
 };
 

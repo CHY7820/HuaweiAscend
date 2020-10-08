@@ -39,6 +39,7 @@ endif()
 include_directories(
     $ENV{HOME}/ascend_ddk/arm/include/
     $ENV{HOME}/ascend_ddk/arm/include/opencv4
+    $ENV{HOME}/presenteragent/include/
     ${INC_PATH}/acllib/include/
     ../inc/
 )
@@ -52,6 +53,7 @@ link_directories(
     ${LIB_PATH}
     $ENV{HOME}/ascend_ddk/arm/lib/
     ${INC_PATH}/atc/lib64
+    $ENV{HOME}/presenteragent/include/agent/
 )
 
 add_executable(main
