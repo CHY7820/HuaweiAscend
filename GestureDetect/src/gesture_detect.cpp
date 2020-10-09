@@ -211,7 +211,7 @@ Result GestureDetect::Process() {
 //        cout<<image_desc.get()<<endl;
 
         Result ret = OpenposeModel_.Preprocess(image_desc, imageFile); // resize and padding the frame
-//        printf("desc:%f\n",*(image_desc->data));
+        printf("desc:%f\n",*(image_desc->data));
 
         // create input for the model inference.
         ret = OpenposeModel_.CreateInput((void*) image_desc->data.get(), image_desc->size);
@@ -229,7 +229,7 @@ Result GestureDetect::Process() {
 
         std::cout << "infer time " << double(clock() - infer_time) / CLOCKS_PER_SEC << std::endl;
 
-        aclmdlDataset*inferenceOutput = OpenposeModel_.GetModelOutputData();
+        aclmdlDataset* inferenceOutput = OpenposeModel_.GetModelOutputData();
         if ((ret != SUCCESS) || (inferenceOutput == nullptr)) {
             ERROR_LOG("Inference model inference output data failed");
             return FAILED;

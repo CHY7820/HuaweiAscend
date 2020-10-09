@@ -17,6 +17,7 @@
 * Description: handle file operations
 */
 #include "utils.h"
+#include <bits/stdint-uintn.h>
 #include <map>
 #include <iostream>
 #include <fstream>
@@ -164,40 +165,15 @@ void* Utils::CopyDataHostToDevice(void* deviceData, uint32_t dataSize) {
 
 
 void Utils::ImageNchw(shared_ptr<ImageDesc>& imageData, std::vector<cv::Mat>& nhwcImageChs, uint32_t size) {
-    float* nchwBuf = new float[size];
-    //int channelSize = IMAGE_CHAN_SIZE_F32(nhwcImageChs[0].rows, nhwcImageChs[0].cols);
-    int channelSize=sizeof(nchwBuf[0]);
+    uint8_t* nchwBuf = new uint8_t[size];
+    int channelSize = IMAGE_CHAN_SIZE_F32(nhwcImageChs[0].rows, nhwcImageChs[0].cols);
     int pos = 0;
-//    printf("%d\n", nhwcImageChs[i]);
     for (int i = 0; i < nhwcImageChs.size(); i++) {
-//        printf("channel\n");
-//        printf("%f\n", *(nhwcImageChs[i].ptr<float>(0)));
-        memcpy(nchwBuf+ pos,  nhwcImageChs[i].ptr<float>(0), channelSize); //对于ptr来说只输入1个参数代码取第几行的地址
-//        printf("%f\n", *(nchwBuf+pos));
-        //        if(i==0)
-//        {
-//            for(int k=0;k<1;k++)
-//            {
-//                std::cout<<*(nchwBuf+k)<<std::endl;
-//            }
-//        } // ?
-
+        memcpy(static_cast<uint8_t *>(nchwBuf) + pos,  nhwcImageChs[i].ptr<float>(0), channelSize);
         pos += channelSize;
     }
-//    std::cout<<"test"<<std::endl;
-   // printf("%d",*(nchwBuf));
-//    std::cout<<nchwBuf<<std::endl;
-//    std::cout<<"test"<<std::endl;
     imageData->size = size;
-    imageData->data.reset((float *)nchwBuf, [](float* p) { delete[](p);} );
-//    printf("%f",*(imageData->data));
-//    for(int k=0;k<10;k++)
-//    {
-//        std::cout<<*(imageData->data.get()+k)<<std::endl;
-//    }
-    //std::cout<<"data addr: "<<(void*)imageData->data.get()<<std::endl;
-    //std::cout<<"nchwBuf addr: "<<(void*)nchwBuf<<std::endl;
-
+    imageData->data.reset((uint8_t *)nchwBuf, [](uint8_t* p) { delete[](p);} );
 }
 
 //Result Utils::CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode) {

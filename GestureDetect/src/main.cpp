@@ -16,7 +16,7 @@ bool g_isDevice = false;
 
 
 namespace {
-const char* kOpenPoseModelPath = "../model/openpose.om";
+const char* kOpenPoseModelPath = "../model/openpose0.om";
 const char* kGestureModelPath = "../model/stgcn.om";
 const std::string kImageDir = "../data/";
 uint32_t ImgWidth = 160;

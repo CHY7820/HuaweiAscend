@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "pose_process.h"
 #include "acl/acl.h"
+#include <bits/stdint-uintn.h>
 #include <cstddef>
 #include <cmath>
 #include "eigen3/Eigen/Core"
@@ -60,18 +61,21 @@ Result OpenPoseProcess::Preprocess(shared_ptr<ImageDesc>& imageData, const std::
         return FAILED;
     }
     //resize image to model size
-    cv::Mat reiszedImage, rsImageF32;
-    cv::resize(image, reiszedImage, cv::Size(modelWidth_,modelHeight_));
-    reiszedImage.convertTo(rsImageF32, CV_32FC3);
-//    std::cout<<"rsImageF32 addr:"<<&rsImageF32<<std::endl;
+    cv::Mat resizedImage, rsImageF32;
+//    cv::Mat resizedImage;
+    cv::resize(image, resizedImage, cv::Size(modelWidth_,modelHeight_));
+    resizedImage.convertTo(rsImageF32, CV_32FC3);
+
     //R G B channel means
     std::vector<cv::Mat> channels;
+//    cv::split(resizedImage,channels);
     cv::split(rsImageF32, channels);
-//    printf("channels=%d",channels[0].ptr<float>(0));
 
-    //Transform NHWC to NCHW
+//    Transform NHWC to NCHW
     uint32_t size = RGB_IMAGE_SIZE_F32(modelWidth_, modelHeight_);
+//    uint32_t size = RGB_IMAGE_SIZE_U8(modelWidth_,modelHeight_);
     Utils::ImageNchw(imageData,channels,size);
+
 //    printf("imagedata:%f",*(imageData->data));
 
     void* imageDev;
@@ -81,11 +85,14 @@ Result OpenPoseProcess::Preprocess(shared_ptr<ImageDesc>& imageData, const std::
         ERROR_LOG("Copy image info to device failed");
         return FAILED;
     }
-
     imageData->size = size;
-//    printf("%d",*(imageDev));
-    imageData->data.reset((float*)imageDev, [](float* p) { aclrtFree(p);} );
-//    printf("imagedata:%f",*(imageData->data));
+    imageData->data.reset((uint8_t *)imageDev,
+    [](uint8_t* p) { aclrtFree(p);} );
+
+//    imageData->data.reset((float*)imageDev, [](float* p) { aclrtFree(p);} );
+//    imageData->data.reset((uint8_t* )imageDev,[](uint8_t* p){
+//        aclrtFree(p);});
+
     return SUCCESS; //nn_width; // resized_width
 
 }
@@ -123,8 +130,10 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput, std::shared_ptr
 
 //     uint32_t dataSize = 0;
     // process heatmap
-    // float* newresult = (float *)GetInferenceOutputItem(dataSize, modelOutput, 1);
+//     float* newresult = (float *)GetInferenceOutputItem(dataSize, modelOutput, 1);
 //    float* newresult_0 = (float *)GetInferenceOutputItem(dataSize, modelOutput, 0);
+
+//    float results[57];
     float newresult[19],newresult_0[38];
     size_t outDatasetNum = aclmdlGetDatasetNumBuffers(modelOutput);
     if (outDatasetNum != 2) {
@@ -148,7 +157,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput, std::shared_ptr
         return FAILED;
     }
 
-
+//
     dataBuffer = aclmdlGetDatasetBuffer(modelOutput, 0);
     if (dataBuffer == nullptr) {
         ERROR_LOG("get model output aclmdlGetDatasetBuffer failed");
@@ -159,20 +168,28 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput, std::shared_ptr
         ERROR_LOG("aclGetDataBufferAddr from dataBuffer failed.");
         return FAILED;
     }
-    ret = aclrtMemcpy(newresult_0, sizeof(newresult), data, sizeof(newresult), ACL_MEMCPY_DEVICE_TO_DEVICE);
+    ret = aclrtMemcpy(newresult_0, sizeof(newresult_0), data, sizeof(newresult_0), ACL_MEMCPY_DEVICE_TO_DEVICE);
     if (ret != ACL_ERROR_NONE) {
         ERROR_LOG("box count aclrtMemcpy failed!");
         return FAILED;
     }
-
-//    for(int k=0;k<19;k++)
+//    for(int i=0;i<58;i++)
 //    {
-//        newresult[k]*=1e4;
-//        if(newresult[k]>=1){newresult[k]=1.0;}
+//        if(i<38) { newresult_0[i] = results[i]; }
+//        else{
+//            newresult[i-38] = results[i];
+//        }
 //    }
+
     for(int k=0;k<19;k++)
     {
-        std::cout<<newresult[k]<<std::endl;
+        newresult[k]*=1e4;
+        if(newresult[k]>=1){newresult[k]=1.0;}
+    }
+    for(int k=0;k<19;k++)
+    {
+        std::cout<<"newresult: "<<newresult[k]<<std::endl;
+        std::cout<<"newresult_0: "<<newresult_0[k]<<std::endl;
     }  // len = 19
 
     cv::Mat temp_mat;
@@ -215,6 +232,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput, std::shared_ptr
 
         // 先找16x16的最大数值的下标，temp_aa是最大值的数值
         temp_aa = m.maxCoeff(&maxRow_F, &maxCol_F);
+        std::cout<<"temp_aa"<<temp_aa<<std::endl;
 
         // 最大值都不大于0.1，认为本帧图像无效
         // 特殊处理掉,todo
@@ -491,14 +509,14 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput, std::shared_ptr
             one_connection.clear();
         }
     }//这里，已经把所有的连接关系都找到了
-    cout<<"######"<<endl;
+   /* cout<<"######"<<endl;
     int kk;
     for(kk=0;kk<19;kk++)
     {
         cout<<connection_all[kk].size()<<endl;
-    }
+    }*/
     // =======================================================================
-    int flag = 0;
+    /*int flag = 0;
     //all_key_points里存了坐标和得分和全局序号
     //connection_all里存了连接的关键点的全局序号，连接得分，人体预备得分
     // 里面是vector<connectionT>
@@ -578,7 +596,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput, std::shared_ptr
                 subset.push_back(tem_new);
             }
         }
-        //cout<<1<<endl;
+        cout<<1<<endl;
     }
 
 
@@ -616,8 +634,8 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput, std::shared_ptr
         }
     }
 
-
-
+*/
+/*
     cv::Point x0(temp_key_points[0][0], temp_key_points[1][0]);
     cv::Point x1(temp_key_points[0][1], temp_key_points[1][1]);
     cv::Point x2(temp_key_points[0][2], temp_key_points[1][2]);
@@ -674,7 +692,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput, std::shared_ptr
             }
         }
     }
-    std::cout<<motion_data_new.size()<<std::endl;
+*/
     return SUCCESS;
 }
 

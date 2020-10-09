@@ -314,6 +314,7 @@ void* ModelProcess::GetInferenceOutputItem(uint32_t& itemDataSize, aclmdlDataset
 
     void* data = dataBufferDev;
     itemDataSize = bufferSize;
+    printf("data-inside: %f",*((float*)data));
     return data;
 }
 

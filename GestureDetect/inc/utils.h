@@ -39,12 +39,12 @@ using namespace std;
 #define WARN_LOG(fmt, args...) fprintf(stdout, "[WARN]  " fmt "\n", ##args)
 #define ERROR_LOG(fmt, args...) fprintf(stdout, "[ERROR]  " fmt "\n", ##args)
 
-#define RGBU8_IMAGE_SIZE(width, height) ((width) * (height) * 3)
+#define RGB_IMAGE_SIZE_U8(width, height) ((width) * (height) * 3)
 #define RGB_IMAGE_SIZE_F32(width, height) ((width) * (height) * 3 * 4)
 #define IMAGE_CHAN_SIZE_F32(width, height) ((width) * (height) * 4)
 
 
-#define FRAME_LENGTH 50
+#define FRAME_LENGTH 100
 #define PEOPLE_MOST 10
 
 
@@ -79,7 +79,8 @@ struct ImageDesc {
     uint32_t img_height = 0;
     int32_t size = 0;
    // std::string input_path = "";
-    std::shared_ptr<float> data;
+//    std::shared_ptr<float> data;
+    std::shared_ptr<uint8_t> data;
 };
 
 
@@ -131,7 +132,7 @@ typedef struct EngineTransNew
 	// 那第一维应该是人？
     float data [1][3][FRAME_LENGTH][18];
     //    float data [2][30][14];
-    size_t buffer_size;   // buffer size
+    size_t buffer_size ;   // buffer size
 }EngineTransNewT;
 
 
