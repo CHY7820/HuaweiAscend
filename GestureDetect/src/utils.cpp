@@ -164,18 +164,6 @@ void* Utils::CopyDataHostToDevice(void* deviceData, uint32_t dataSize) {
 }
 
 
-void Utils::ImageNchw(shared_ptr<ImageDesc>& imageData, std::vector<cv::Mat>& nhwcImageChs, uint32_t size) {
-    uint8_t* nchwBuf = new uint8_t[size];
-    int channelSize = IMAGE_CHAN_SIZE_F32(nhwcImageChs[0].rows, nhwcImageChs[0].cols);
-    int pos = 0;
-    for (int i = 0; i < nhwcImageChs.size(); i++) {
-        memcpy(static_cast<uint8_t *>(nchwBuf) + pos,  nhwcImageChs[i].ptr<float>(0), channelSize);
-        pos += channelSize;
-    }
-    imageData->size = size;
-    imageData->data.reset((uint8_t *)nchwBuf, [](uint8_t* p) { delete[](p);} );
-}
-
 //Result Utils::CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode) {
 //    void * buffer;
 //    if (mode == ACL_HOST)

@@ -43,7 +43,6 @@ using namespace std;
 #define RGB_IMAGE_SIZE_F32(width, height) ((width) * (height) * 3 * 4)
 #define IMAGE_CHAN_SIZE_F32(width, height) ((width) * (height) * 4)
 
-
 #define FRAME_LENGTH 100
 #define PEOPLE_MOST 10
 
@@ -69,21 +68,6 @@ typedef enum Result {
     FAILED = 1
 }Result;
 
-struct Resolution {
-    uint32_t width = 0;
-    uint32_t height = 0;
-};
-
-struct ImageDesc {
-    uint32_t img_width = 0;
-    uint32_t img_height = 0;
-    int32_t size = 0;
-   // std::string input_path = "";
-//    std::shared_ptr<float> data;
-    std::shared_ptr<uint8_t> data;
-};
-
-
 
 struct Rect {
     uint32_t ltX = 0;
@@ -94,11 +78,11 @@ struct Rect {
 
 
 
-typedef struct key_points{
-    float point_x;
-    float point_y;
+typedef struct key_point{
+    float x;
+    float y;
 	float score;
-    int num;
+//    int num;
 } key_pointsT;
 
 
@@ -123,17 +107,17 @@ typedef struct ohuamn {
 } human;
 
 // jiashi changed
-typedef struct EngineTransNew
-{
-    //    std::vector<std::vector<std::vector<float>>> data;
-	// 最后一维是关键点
-	// 倒数第二维是帧
-	// 正数第二维是x与y
-	// 那第一维应该是人？
-    float data [1][3][FRAME_LENGTH][18];
-    //    float data [2][30][14];
-    size_t buffer_size ;   // buffer size
-}EngineTransNewT;
+//typedef struct EngineTransNew
+//{
+//    //    std::vector<std::vector<std::vector<float>>> data;
+//	// 最后一维是关键点
+//	// 倒数第二维是帧
+//	// 正数第二维是x与y
+//	// 那第一维应该是人？
+//    float data [1][3][FRAME_LENGTH][18];
+//    //    float data [2][30][14];
+//    size_t buffer_size ;   // buffer size
+//}EngineTransNewT;
 
 
 struct BBox {
@@ -176,7 +160,6 @@ public:
     static void* CopyDataHostToDevice(void* deviceData, uint32_t dataSize);
     static void* CopyDataDeviceToDevice(void* deviceData, uint32_t dataSize);
 
-    static void ImageNchw(shared_ptr<ImageDesc>& imageData, std::vector<cv::Mat>& nhwcImageChs, uint32_t size);
 
     //    static int ReadImageFile(ImageData& image, std::string fileName);
 //    static Result CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode);

@@ -19,13 +19,12 @@ namespace {
 const char* kOpenPoseModelPath = "../model/openpose0.om";
 const char* kGestureModelPath = "../model/stgcn.om";
 const std::string kImageDir = "../data/";
-uint32_t ImgWidth = 160;
-uint32_t ImgHeight = 120;
+
 }
 
 int main()
 {
-    GestureDetect detect(kOpenPoseModelPath,kGestureModelPath,ImgWidth,ImgHeight);
+    GestureDetect detect(kOpenPoseModelPath,kGestureModelPath);
     Result ret = detect.Init();
     if (ret != SUCCESS) {
         ERROR_LOG("Detect init resource failed");

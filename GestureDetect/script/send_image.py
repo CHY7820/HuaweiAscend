@@ -7,6 +7,7 @@ import os
 # 传输图片
 import paramiko
 
+MAX_FRAME = 100
 # 修改Atlas 200DK的IP以及要传输的目标位置
 Atlas_IP = "192.168.1.2"
 Atlas_path = "HIAI_PROJECTS/workspace_mind_studio/GestureDetect_e8aa832f/data/frames/"
@@ -41,7 +42,7 @@ def read_capture():
         print ("发送第%d张图片"%num)
         num += 1
         # 一百张图片一次循环
-        num = num % 100
+        num = num % MAX_FRAME
 
         cv2.namedWindow('capture face detection', cv2.WINDOW_NORMAL)
         cv2.imshow('capture face detection', img_np)

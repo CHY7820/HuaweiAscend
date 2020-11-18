@@ -8,11 +8,12 @@
 
 class GestureDetect {
 public:
-    GestureDetect(const char* kOpenPoseModelPath,const char* kGestureModelPath,uint32_t ImgWidth,uint32_t ImgHeight);
+    GestureDetect(const char* kOpenPoseModelPath,const char* kGestureModelPath);
     ~GestureDetect();
     Result Init();
     Result Process();
     void DeInit();
+    float motion_data [1][3][FRAME_LENGTH][18];
 
 private:
 
@@ -21,7 +22,7 @@ private:
     Result ProcessMotionData();
 
 
-    OpenPoseProcess OpenposeModel_;
+    OpenPoseProcess OpenPoseModel_;
     GestureProcess GestureModel_;
 
     int32_t deviceId_;
@@ -37,5 +38,5 @@ private:
 
     aclmdlDataset* input_;
     aclmdlDataset* output_;
-    std::shared_ptr<EngineTransNewT> motion_data_new = std::make_shared<EngineTransNewT>();
+//    std::shared_ptr<EngineTransNewT> motion_data_new = std::make_shared<EngineTransNewT>();
 };

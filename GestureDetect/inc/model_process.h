@@ -17,6 +17,7 @@
 */
 class ModelProcess {
 public:
+
     /**
     * @brief Constructor
     */
@@ -27,6 +28,7 @@ public:
     * @brief Destructor
     */
     virtual ~ModelProcess();
+
 
     /**
     * @brief load model from file with mem

@@ -30,6 +30,7 @@ ModelProcess::~ModelProcess()
     DestroyOutput();
 }
 
+
 Result ModelProcess::LoadModelFromFileWithMem(const char *modelPath)
 {
     if (loadFlag_) {
@@ -182,6 +183,11 @@ Result ModelProcess::CreateOutput()
     return SUCCESS;
 }
 
+
+
+
+
+
 void ModelProcess::DumpModelOutputResult()
 {
     stringstream ss;
@@ -289,6 +295,7 @@ void ModelProcess::DumpModelOutputResult()
 //    return;
 //}
 
+
 void* ModelProcess::GetInferenceOutputItem(uint32_t& itemDataSize, aclmdlDataset* inferenceOutput, uint32_t idx) {
     //    printf("get output id %d\n", idx);
     aclDataBuffer* dataBuffer = aclmdlGetDatasetBuffer(inferenceOutput, idx);
@@ -314,7 +321,7 @@ void* ModelProcess::GetInferenceOutputItem(uint32_t& itemDataSize, aclmdlDataset
 
     void* data = dataBufferDev;
     itemDataSize = bufferSize;
-    printf("data-inside: %f",*((float*)data));
+//    printf("data-inside: %f",*((float*)data));
     return data;
 }
 

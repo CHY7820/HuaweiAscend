@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/home/mind/AscendProjects/GestureDetect/build/cmake/src",
+  "command": "/usr/bin/c++  -DENABLE_DVPP_INTERFACE -I/home/mind/ascend_ddk/arm/include -I/home/mind/ascend_ddk/arm/include/opencv4 -I/home/mind/presenteragent/include -I/home/mind/Ascend/ascend-toolkit/20.0.RC1/acllib_centos7.6.aarch64/acllib/include -I/home/mind/AscendProjects/GestureDetect/src/../inc    -std=c++11 -o CMakeFiles/main.dir/utils.cpp.o -c /home/mind/AscendProjects/GestureDetect/src/utils.cpp",
+  "file": "/home/mind/AscendProjects/GestureDetect/src/utils.cpp"
+},
+{
+  "directory": "/home/mind/AscendProjects/GestureDetect/build/cmake/src",
+  "command": "/usr/bin/c++  -DENABLE_DVPP_INTERFACE -I/home/mind/ascend_ddk/arm/include -I/home/mind/ascend_ddk/arm/include/opencv4 -I/home/mind/presenteragent/include -I/home/mind/Ascend/ascend-toolkit/20.0.RC1/acllib_centos7.6.aarch64/acllib/include -I/home/mind/AscendProjects/GestureDetect/src/../inc    -std=c++11 -o CMakeFiles/main.dir/model_process.cpp.o -c /home/mind/AscendProjects/GestureDetect/src/model_process.cpp",
+  "file": "/home/mind/AscendProjects/GestureDetect/src/model_process.cpp"
+},
+{
+  "directory": "/home/mind/AscendProjects/GestureDetect/build/cmake/src",
+  "command": "/usr/bin/c++  -DENABLE_DVPP_INTERFACE -I/home/mind/ascend_ddk/arm/include -I/home/mind/ascend_ddk/arm/include/opencv4 -I/home/mind/presenteragent/include -I/home/mind/Ascend/ascend-toolkit/20.0.RC1/acllib_centos7.6.aarch64/acllib/include -I/home/mind/AscendProjects/GestureDetect/src/../inc    -std=c++11 -o CMakeFiles/main.dir/pose_process.cpp.o -c /home/mind/AscendProjects/GestureDetect/src/pose_process.cpp",
+  "file": "/home/mind/AscendProjects/GestureDetect/src/pose_process.cpp"
+},
+{
+  "directory": "/home/mind/AscendProjects/GestureDetect/build/cmake/src",
+  "command": "/usr/bin/c++  -DENABLE_DVPP_INTERFACE -I/home/mind/ascend_ddk/arm/include -I/home/mind/ascend_ddk/arm/include/opencv4 -I/home/mind/presenteragent/include -I/home/mind/Ascend/ascend-toolkit/20.0.RC1/acllib_centos7.6.aarch64/acllib/include -I/home/mind/AscendProjects/GestureDetect/src/../inc    -std=c++11 -o CMakeFiles/main.dir/gesture_process.cpp.o -c /home/mind/AscendProjects/GestureDetect/src/gesture_process.cpp",
+  "file": "/home/mind/AscendProjects/GestureDetect/src/gesture_process.cpp"
+},
+{
+  "directory": "/home/mind/AscendProjects/GestureDetect/build/cmake/src",
+  "command": "/usr/bin/c++  -DENABLE_DVPP_INTERFACE -I/home/mind/ascend_ddk/arm/include -I/home/mind/ascend_ddk/arm/include/opencv4 -I/home/mind/presenteragent/include -I/home/mind/Ascend/ascend-toolkit/20.0.RC1/acllib_centos7.6.aarch64/acllib/include -I/home/mind/AscendProjects/GestureDetect/src/../inc    -std=c++11 -o CMakeFiles/main.dir/gesture_detect.cpp.o -c /home/mind/AscendProjects/GestureDetect/src/gesture_detect.cpp",
+  "file": "/home/mind/AscendProjects/GestureDetect/src/gesture_detect.cpp"
+},
+{
+  "directory": "/home/mind/AscendProjects/GestureDetect/build/cmake/src",
+  "command": "/usr/bin/c++  -DENABLE_DVPP_INTERFACE -I/home/mind/ascend_ddk/arm/include -I/home/mind/ascend_ddk/arm/include/opencv4 -I/home/mind/presenteragent/include -I/home/mind/Ascend/ascend-toolkit/20.0.RC1/acllib_centos7.6.aarch64/acllib/include -I/home/mind/AscendProjects/GestureDetect/src/../inc    -std=c++11 -o CMakeFiles/main.dir/main.cpp.o -c /home/mind/AscendProjects/GestureDetect/src/main.cpp",
+  "file": "/home/mind/AscendProjects/GestureDetect/src/main.cpp"
+}
+]

@@ -20,15 +20,11 @@
 
 using namespace std;
 
-GestureDetect::GestureDetect(const char* kOpenPoseModelPath,const char* kGestureModelPath,
-                            uint32_t ImgWidth, uint32_t ImgHeight)
+GestureDetect::GestureDetect(const char* kOpenPoseModelPath,const char* kGestureModelPath)
 : deviceId_(0),context_(nullptr),stream_(nullptr),
 isInited_(false),OpenPoseModelPath_(kOpenPoseModelPath), GestureModelPath_(kGestureModelPath) {
-    OpenposeModel_.set_modelId(0);
-//    OpenposeModel_.set_modelsize(ImgWidth,ImgHeight);
+    OpenPoseModel_.set_modelId(0);
     GestureModel_.set_modelId(1);
-//    inputDataSize_ = (ImgWidth, ImgHeight);
-
 }
 
 GestureDetect::~GestureDetect() {
@@ -70,50 +66,9 @@ Result GestureDetect::InitResource() {
 }
 
 Result GestureDetect::InitModel(const char* OpenPoseModelPath, const char* GestureModelPath) {
-    Result ret = OpenposeModel_.LoadModelFromFileWithMem(OpenPoseModelPath);
-    if(ret!=SUCCESS) {
-        ERROR_LOG("openpose model load failed");
-        return FAILED;
-    }
-    INFO_LOG("openpose model load success");
 
-    ret = GestureModel_.LoadModelFromFileWithMem(GestureModelPath);
-    if(ret!=SUCCESS) {
-        ERROR_LOG("gesture model load failed");
-        return FAILED;
-    }
-    INFO_LOG("gesture model load success");
-
-    ret = OpenposeModel_.CreateDesc();
-    if(ret!=SUCCESS) {
-        ERROR_LOG("openpose model CreateDesc failed");
-        return FAILED;
-    }
-    INFO_LOG("openpose model CreateDesc success");
-
-    ret = GestureModel_.CreateDesc();
-    if(ret!=SUCCESS) {
-        ERROR_LOG("gesture model CreateDesc failed");
-        return FAILED;
-    }
-    INFO_LOG("gesture model CreateDesc success");
-
-
-    ret = OpenposeModel_.CreateOutput();
-    if(ret!=SUCCESS) {
-        ERROR_LOG("openpose model CreateOutPut failed");
-        return FAILED;
-    }
-    INFO_LOG("openpose model CreateOutPut success");
-
-    ret = GestureModel_.CreateOutput();
-    if(ret!=SUCCESS) {
-        ERROR_LOG("gesture model CreateOutPut failed");
-        return FAILED;
-    }
-    INFO_LOG("gesture model CreateOutPut success");
-
-
+    OpenPoseModel_.InitModel(OpenPoseModelPath);
+    GestureModel_.InitModel(GestureModelPath);
     return SUCCESS;
 
 }
@@ -162,42 +117,45 @@ Result GestureDetect::ProcessMotionData() {
     // 计算前五帧人体躯干的像素长度，作为标准，进行归一化
     for (int pic_num = FRAME_LENGTH-1; pic_num > FRAME_LENGTH-6; pic_num--){
         // 累加
-        total_bottom +=  float(motion_data_new->data[0][1][pic_num][8] + motion_data_new->data[0][1][pic_num][11]) / 2 - float(motion_data_new->data[0][1][pic_num][1]);
+        total_bottom +=  float(motion_data[0][1][pic_num][8] + motion_data[0][1][pic_num][11]) / 2 - float(motion_data[0][1][pic_num][1]);
     }
 
     total_bottom /= 5.0;
     for (int pic_num = 0; pic_num < FRAME_LENGTH; pic_num++){
         for(int key_num = 0; key_num < 18; key_num++){
-            motion_data_new->data[0][0][pic_num][key_num] /= total_bottom;
-            motion_data_new->data[0][1][pic_num][key_num] /= total_bottom;
+            motion_data[0][0][pic_num][key_num] /= total_bottom;
+            motion_data[0][1][pic_num][key_num] /= total_bottom;
         }
     }
     return SUCCESS;
 }
 
 Result GestureDetect::Process() {
-    int success_num = -4;
+    bool start_flag=false;
+    int success_num = -5;
     int image_num = 0;
+
     clock_t start_time = clock();
-
-    shared_ptr<ImageDesc> image_desc = nullptr;
-    MAKE_SHARED_NO_THROW(image_desc, ImageDesc);
-
-    if (image_desc == nullptr) {
-        ERROR_LOG("Failed to MAKE_SHARED_NO_THROW for ImageDesc.");
-        return FAILED;
-    }
 
 
     for (;;image_num++) {
         std::cout<<"image num: "<<image_num<<std::endl;
-        image_num %= FRAME_LENGTH;
+        if(image_num>=FRAME_LENGTH)
+        {
+            image_num %= FRAME_LENGTH;
+            if(!start_flag)
+                start_flag=true;
+
+        }
+
+
         // 图像文件的路径
         std::string imageFile = "../data/frames/" + to_string(image_num) + ".jpg";
         const char* tmp = imageFile.data();
-        std::cout<<"image path: "<<tmp<<std::endl;
+//        std::cout<<"image path: "<<tmp<<std::endl;
         // 检查该文件是否存在
-        if ((access(tmp, 0)) == -1) {
+        if ((access(tmp, 0)) == -1)
+        {
             break;
             image_num--;
             std::cout<<"image_num-- "<<std::endl;
@@ -207,55 +165,44 @@ Result GestureDetect::Process() {
         }
 
         clock_t read_time = clock();
-//        cout<<image_desc<<endl;
-//        cout<<image_desc.get()<<endl;
 
-        Result ret = OpenposeModel_.Preprocess(image_desc, imageFile); // resize and padding the frame
-        printf("desc:%f\n",*(image_desc->data));
-
-        // create input for the model inference.
-        ret = OpenposeModel_.CreateInput((void*) image_desc->data.get(), image_desc->size);
-//        cout<<"size"<<image_desc->size<<endl;
-        if (ret != SUCCESS) {
-            ERROR_LOG("execute CreateInput failed");
-            return FAILED;
-        }
-
-        //将预处理的图片送入OpenPose模型推理,并获取OpenPose推理结果
+        Result ret = OpenPoseModel_.Preprocess(imageFile);
+        // 将预处理的图片送入OpenPose模型推理,并获取OpenPose推理结果
         // 推理时间
         clock_t infer_time = clock();
-
-        OpenposeModel_.Execute();
-
+        aclmdlDataset* inferenceOutput;
+        OpenPoseModel_.Inference(inferenceOutput);
         std::cout << "infer time " << double(clock() - infer_time) / CLOCKS_PER_SEC << std::endl;
 
-        aclmdlDataset* inferenceOutput = OpenposeModel_.GetModelOutputData();
-        if ((ret != SUCCESS) || (inferenceOutput == nullptr)) {
-            ERROR_LOG("Inference model inference output data failed");
-            return FAILED;
-        }
          //解析OpenPose推理输出
-        ret = OpenposeModel_.Postprocess(inferenceOutput, motion_data_new);
+
+        ret = OpenPoseModel_.Postprocess(inferenceOutput, motion_data);
         success_num++;
         if (ret != SUCCESS) {
             std::cout<<"Openpose Postprocess not success"<<std::endl;
             continue;
         }
-        // 删除之前的图片
-        int before_index = image_num - 50;
-        if (before_index < 0) {
-            before_index += 100;
+        if(start_flag)
+        {
+            // 删除之前的图片
+            int before_index = image_num - FRAME_LENGTH/2;
+            if (before_index < 0) {
+                before_index += FRAME_LENGTH;
+            }
+            string img_path = "../data/frames/" + to_string(before_index) + ".jpg";
+            const char * pre_img = img_path.c_str();
+            // 删除图片文件
+            unlink(pre_img);
         }
-        string img_path = "../data/frames/" + to_string(before_index) + ".jpg";
-        const char * pre_img = img_path.c_str();
-        // 删除图片文件
-        unlink(pre_img);
+
 
         clock_t pose_time = clock();
         std::cout << "pose_time time " << double(clock() - pose_time) / CLOCKS_PER_SEC << std::endl;
 
         // 每更新五帧进行一次动作识别
-        if (success_num % 5 == 0) {
+
+        if (start_flag && (success_num % 5 == 0)) {
+            cout<<"hello"<<endl;
             //ProcessMotionData();
             //SaveData();
             //将人体骨架序列送入Gesture模型推理,并获取400种动作的可能性
@@ -263,7 +210,7 @@ Result GestureDetect::Process() {
 
             clock_t ges_time = clock();
 
-            ret = GestureModel_.Inference(gestureOutput, motion_data_new);
+            ret = GestureModel_.Inference(gestureOutput, motion_data);
             if ((ret != SUCCESS) || (gestureOutput == nullptr)) {
                 ERROR_LOG("Inference model inference output data failed");
                 return FAILED;
@@ -295,14 +242,6 @@ void GestureDetect::DeInit() {
             ERROR_LOG("destroy stream failed");
         }
         stream_ = nullptr;
-    }
-
-    if (context_ != nullptr) {
-        ret = aclrtDestroyStream(context_);
-        if(ret != ACL_ERROR_NONE) {
-            ERROR_LOG("destroy context failed");
-        }
-        context_ = nullptr;
     }
 
     ret = aclrtResetDevice(deviceId_);
