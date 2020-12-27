@@ -5,10 +5,11 @@
 #include "ascenddk/presenter/agent/presenter_channel.h"
 #include <bits/stdint-uintn.h>
 #include <cmath>
-
+#include <fstream>
 using namespace std;
 
 GestureProcess::GestureProcess() : ModelProcess() {}
+
 
 
 Result GestureProcess::InitModel(const char* modelPath)
@@ -36,6 +37,12 @@ Result GestureProcess::InitModel(const char* modelPath)
 
     INFO_LOG("model CreateOutPut success");
 
+    ret = OpenPresenterChannel();
+    if (ret != SUCCESS) {
+        ERROR_LOG("Open presenter channel failed");
+        return FAILED;
+    }
+
     INFO_LOG("STGCN Model initial success!");
     return SUCCESS;
 }
@@ -43,8 +50,10 @@ Result GestureProcess::InitModel(const char* modelPath)
 
 Result GestureProcess::Inference(aclmdlDataset*& inferenceOutput, float motion_data[1][3][FRAME_LENGTH][18]) {
 
+//    cout<<"in gesture inferences..."<<endl;
     uint32_t buffer_size = 3 * FRAME_LENGTH * 18 * sizeof(float);
-    cout<<"x: "<<motion_data[0][0][FRAME_LENGTH-1][0]<<" y: "<<motion_data[0][1][FRAME_LENGTH-1][0]<<" score: "<<motion_data[0][2][FRAME_LENGTH-1][0]<<endl;
+
+//    Utils::write_motion_data(motion_data);
     Result ret = CreateInput((void*) motion_data, buffer_size);
     if (ret != SUCCESS) {
         ERROR_LOG("model CreateInput failed");
@@ -100,7 +109,7 @@ Result GestureProcess::OpenPresenterChannel() {
     ascend::presenter::OpenChannelParam param;
     param.host_ip = "192.168.1.134";  //IP address of Presenter Server
     param.port = 7008;  //port of present service
-    param.channel_name = "colorization-video";
+    param.channel_name = "Gesture Recognization";
     param.content_type = ascend::presenter::ContentType::kVideo;  //content type is Video
     INFO_LOG("OpenChannel start");
     ascend::presenter::PresenterErrorCode errorCode =ascend::presenter::OpenChannel(channel_, param);
@@ -117,49 +126,20 @@ Result GestureProcess::Postprocess(const string &path, aclmdlDataset* modelOutpu
 
     uint32_t ges_size=0;
     float* ges_types =(float*)GetInferenceOutputItem(ges_size,modelOutput,0);
-//    aclDataBuffer* dataBuffer = aclmdlGetDatasetBuffer(modelOutput,0);
-//    if (dataBuffer == nullptr) {
-//        ERROR_LOG("get model output aclmdlGetDatasetBuffer failed");
-//        return FAILED;
-//    }
-//    void* data = aclGetDataBufferAddr(dataBuffer);
-//    if (data == nullptr) {
-//        ERROR_LOG("aclGetDataBufferAddr from dataBuffer failed.");
-//        return FAILED;
-//    }
-//
-//    std::vector<int> res;
-//    aclError ret = aclrtMemcpy(&res, sizeof(res), data, sizeof(res), ACL_MEMCPY_DEVICE_TO_DEVICE);
-//    if (ret != ACL_ERROR_NONE) {
-//        ERROR_LOG("result labels aclrtMemcpy failed!");
-//        return FAILED;
-//    }
-//    cout<<res[0]<<endl;
-//
-//    std::vector<int>::iterator maxVal = std::max_element(std::begin(res), std::end(res));
-//    int k=std::distance(std::begin(res),maxVal);
-
-
-
-    cout<<"ges_size: "<<ges_size<<endl;
     int max_id=max_element(ges_types,ges_types+40)-ges_types;
-//    for(int i=0;i<40;i++)
-//        cout<<" "<<ges_types[i]<<" ";
-    cout<<"max_id"<<max_id<<" "<<"max_val "<<ges_types[max_id]<<endl;
     cout<<"gesture: "<<gesture_labels[max_id]<<endl;
 
     cv::Point origin;
     cv::Mat img = cv::imread(path, CV_LOAD_IMAGE_COLOR);
-    origin.x=img.rows/6;
-    origin.y=img.cols/6*5;
+    cout<<"if image is empty: "<<img.empty()<<endl;
+    origin.x=img.cols/8;
+    origin.y=img.rows/10;
 
 
-    cv::putText(img,gesture_labels[max_id],origin,cv::FONT_HERSHEY_COMPLEX,2.0,cv::Scalar(0,255,250));
-    cout<<"put text success"<<endl;
-//    cv::imwrite("../out/output/putted_img",img);
+    cv::putText(img,gesture_labels[max_id],origin,cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(127,0,127));
+//    cv::imwrite("./output/putted_img_"+path.substr(15),img);
     SendImage(img);
 
-//    std::cout<<"hello"<<std::endl;
     return SUCCESS;
 }
 

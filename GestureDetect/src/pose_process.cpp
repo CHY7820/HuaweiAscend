@@ -105,7 +105,6 @@ bool cmp2(connectionT a,connectionT b) {
 
 Result OpenPoseProcess::Preprocess(const std::string& imageFile)
 {
-
     cout<<"in openpose preprocess"<<endl;
     // cv读进来的是BGR图像，通道是HWC
     cout<<imageFile<<endl;
@@ -116,25 +115,43 @@ Result OpenPoseProcess::Preprocess(const std::string& imageFile)
     }
 
     //resize image to model size
-    cv::Mat resizedImage; //(modelWidth_,modelHeight_,CV_8UC3);
+//    cv::Mat resizedImage; //(modelWidth_,modelHeight_,CV_8UC3);
 //    cv::imwrite(imageFile.substr(15),image);
-    cv::resize(image, resizedImage, cv::Size(modelWidth_,modelHeight_));
-//    cv::resize(image, resizedImage, cv::Size(160,120));
-//    cv::imwrite("rszd"+imageFile.substr(15),resizedImage);
-    resizedImage.convertTo(resizedImage, CV_32FC3); // uint8 -> float32
-    resizedImage=resizedImage/255.0;
+    cv::resize(image, image, cv::Size(modelWidth_,modelHeight_),cv::INTER_CUBIC);
+
+    image.convertTo(image, CV_32FC3); // uint8 -> float32
+    image=image*(1/255.0)-0.5;
+
+    //    float* input=(float*)image.data;
+//    for(int i=0;i<10;i++)
+//        printf("%f ",input[i]);
+//
+//    input=(float*)image.data;
+//    cout<<endl<<"after"<<endl;
+//    for(int i=0;i<10;i++)
+//        printf("%f ",input[i]);
 
     std::vector<cv::Mat> channels;
-    cv::split(resizedImage,channels);
+    cv::split(image,channels);
     uint32_t channelSize=IMAGE_CHAN_SIZE_F32(modelWidth_,modelHeight_);
+//    for (int i = 0; i < 3; i++) {
+//        cout<<"i:"<<i<<endl;
+//        float* input=(float*)channels[i].data;//.ptr<uchar>(0);
+//        for(int j=100;j<110;j++)
+//            printf("%.4f ",input[j]);
+//        cout<<endl;
+//    }
+    int pos=0;
     for (int i = 0; i < 3; i++) {
-        memcpy(static_cast<float*>(poseInputBuf_) + i*channelSize/sizeof(float), channels[i].ptr<float>(0), channelSize);
+//        memcpy(static_cast<float*>(poseInputBuf_) + i*channelSize/sizeof(float),(float*)channels[i].data, channelSize);// channels[i].ptr<float>(0)
+        memcpy(static_cast<uint8_t*>(poseInputBuf_) + pos,(float*)channels[i].data, channelSize);
+        pos+=channelSize;
         // ptr+idx: move pointer by byte
     }
     cout<<"openpose preprocess success"<<endl;
     // CHW
 // cannot memcpy 3 channels together
-    return SUCCESS; //nn_width; // resized_width
+    return SUCCESS;
 }
 
 Result OpenPoseProcess::Inference(aclmdlDataset*& inferenceOutput) {
@@ -152,57 +169,59 @@ Result OpenPoseProcess::Inference(aclmdlDataset*& inferenceOutput) {
 
 
 Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput,float motion_data[1][3][FRAME_LENGTH][18]) {
-
     static float motion_data_old[1][3][FRAME_LENGTH][18];
+    static bool flag_=false;
+    if(!flag_)
+    {
+        memset(motion_data_old,0,sizeof(motion_data_old));
+        flag_=true;
+    }
+
 
     uint32_t heatmapSize = 0, pafSize=0;
-    float* paf=(float*)GetInferenceOutputItem(pafSize,modelOutput,0);
-    float* heatmap=(float*)GetInferenceOutputItem(heatmapSize,modelOutput,1);
+    float* paf_=(float*)GetInferenceOutputItem(pafSize,modelOutput,0);
+    float* heatmap_=(float*)GetInferenceOutputItem(heatmapSize,modelOutput,1);
+//    cout<<"paf: "<<endl;
+//    for(int i=0;i<10;i++)
+//        printf("%.8f ",paf[i]);
+//    cout<<endl<<"heatmap: "<<endl;
+//    for(int i=0;i<10;i++)
+//        printf("%.8f ",heatmap[i]);
+
+
     cv::Mat temp_mat;
 
     Eigen::Matrix <float, 120, 160> resized_matrix;
-
-    Eigen::Matrix <float,120, 160> left_matrix;
-    Eigen::Matrix <float,120, 160> right_matrix;
+    Eigen::Matrix <float, 120, 160> left_matrix;
+    Eigen::Matrix <float, 120, 160> right_matrix;
     Eigen::Matrix <float, 120, 160> top_matrix;
-    Eigen::Matrix <float,120, 160> bottom_matrix;
+    Eigen::Matrix <float, 120, 160> bottom_matrix;
     Eigen::MatrixXd::Index maxRow, maxCol;
     vector <key_pointsT> keypoint;
     vector<key_pointsT> all_keypoints; // ASSUME one person only
     vector<float> peaks_pos;
     float max_val;
+    float thre=0.3;
 
 
-    float thre=0.1;
     // 找出18个关键点
     for (int part = 0; part < 18; part++) {
-        float score=0,peak_row,peak_col; // hehe
 
-        float *v = heatmap + part * 300;
+
+        float *v = heatmap_ + part * 300;
         // 按照列映射到Matrix
-        Eigen::Map<Eigen::MatrixXf> matmem(v, 15, 20); // matrix memory
-        // m是16*16的矩阵
-        Eigen::Matrix <float, 15, 20> m = matmem;
-
-
-        // 先找16x16的最大数值的下标，temp_aa是最大值的数值
-//        max_val = m.maxCoeff(&maxRow_F, &maxCol_F);
-//        std::cout<<"16x16 max value: "<<max_val<<std::endl;
-
-        // 最大值都不大于0.1，认为本帧图像无效
-        // 特殊处理掉,todo
-//        if (max_val < thre) {
-//            if_valid = false;
-//            cout<<max_val<<endl;
-//            break;
-//        }
+//        Eigen::Map<Eigen::MatrixXf> matmem(v, 15, 20); // matrix memory
+//        Eigen::Matrix <float, 15, 20> m = matmem;
+        cv::Mat heatmap(15,20,CV_32FC1,v); //  Mat::Mat(int rows, int cols, int type, constScalar& s)
         // 扩展15x20为120x160大小
-        cv::eigen2cv(m, temp_mat);
-        cv::resize(temp_mat, temp_mat, cv::Size(modelWidth_,modelHeight_), cv::INTER_CUBIC);
-        cv::GaussianBlur(temp_mat, temp_mat, cv::Size(3, 3), 5);
-        cv::cv2eigen(temp_mat, resized_matrix);
+//        cv::eigen2cv(m, temp_mat);
+//        cv::resize(temp_mat, temp_mat, cv::Size(modelWidth_,modelHeight_), cv::INTER_CUBIC);
+
+        cv::resize(heatmap,heatmap, cv::Size(modelWidth_,modelHeight_), cv::INTER_CUBIC);
+        //        cv::GaussianBlur(temp_mat, temp_mat, cv::Size(3, 3), 5);
+        cv::GaussianBlur(heatmap, heatmap, cv::Size(3, 3), 5);
+        cv::cv2eigen(heatmap, resized_matrix);
         max_val=resized_matrix.maxCoeff(&maxRow,&maxCol);
-//        cout<<"max_val: "<<max_val<<endl;
 
         // 获取矩阵左移的矩阵
         left_matrix.leftCols(159) = resized_matrix.rightCols(159);
@@ -224,7 +243,7 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput,float motion_dat
 
         for (int aa = 0; aa < 120; aa++) {
             for (int bb = 0; bb < 160; bb++) {
-                if (left_matrix(aa, bb) > 0 && right_matrix(aa, bb) > 0 && bottom_matrix(aa, bb) > 0 && top_matrix(aa, bb) > 0 && resized_matrix(aa, bb) > thre) {
+                if (left_matrix(aa, bb) >= 0 && right_matrix(aa, bb) >= 0 && bottom_matrix(aa, bb) >= 0 && top_matrix(aa, bb) >= 0 && resized_matrix(aa, bb) > thre) {
 //                    cout<<"part number: "<<part<<"found"<<endl;
                     peaks_pos.push_back(aa);
                     peaks_pos.push_back(bb);
@@ -232,57 +251,67 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput,float motion_dat
             }
         }
 
+        float peak_score=0,peak_row=0,peak_col=0;
         int peak_num=0;
+        int score=0;
         for (int i = 0; i < peaks_pos.size(); i += 2) {
             int tmp_row=peaks_pos[i];
             int tmp_col=peaks_pos[i+1];
             float tmp_score=resized_matrix(tmp_row,tmp_col);
-            if(tmp_score>score)
+            if(tmp_score>peak_score)
             {
-                score=tmp_score;
+                peak_score=tmp_score;
                 peak_row=(float)tmp_row;
                 peak_col=(float)tmp_col;
             }
+//            cout<<"pos:"<<"x-"<<tmp_row<<"y-"<<tmp_col<<"score-"<<tmp_score<<endl;
 
         }
-
-//        cout<<"score: "<<score<<endl;
-        // 如果有一个部位一个点都没找到，人体缺失一个关键点，就不往下继续找了
-
-//        if (score > thre)
-//        {
-            // 子矩阵中的最大值认为是一个局部最大值（一个关键点）
-            // temp里面存了横纵坐标，和所有特征图找到的peak里，它是第几个找到的，all_peak_index
         key_pointsT keypoint = {
-            peak_row,peak_col,score
+            peak_col,peak_row,peak_score
         };
+        all_keypoints.push_back(keypoint);
+
        // ASUME ONLY ONE PERSON : Take out the best part peak
 
-        all_keypoints.push_back(keypoint);
+
         peaks_pos.clear();
 
     }
 
+    // TEST OPENPOSE
     // 生成一张纯白图，用于画出结果图
-    cv::Mat out(cv::Size(modelWidth_,modelHeight_), CV_8UC3, cv::Scalar(255, 255, 255)); // cv::Scalar(b,g,r,alpha)
-    for(int i=0;i<all_keypoints.size();i++)
-    {
-        key_pointsT kpt=all_keypoints[i];
-        cv::Point p(kpt.x,kpt.y);
-        cv::circle(out, p, kpt.score*10, cv::Scalar(0, 0, 255));
-    }
-//    cv::resize(out,out,cv::Size(modelWidth_,modelHeight_));
-    cv::imwrite("../out/output/result.jpg", out);
+//    static int id=0;
+//
+//    cv::Mat out=cv::imread("../data/frames/"+to_string(id)+".jpg");//out(cv::Size(modelWidth_,modelHeight_), CV_8UC3, cv::Scalar(255, 255, 255)); // cv::Scalar(b,g,r,alpha)
+//    int col=out.cols;
+//    int row=out.rows;
+//
+//    cv::resize(out, out, cv::Size(modelWidth_,modelHeight_),cv::INTER_CUBIC);
+//
+//    if(id<5)
+//    {
+//        for(int i=0;i<all_keypoints.size();i++)
+//        {
+//            key_pointsT kpt=all_keypoints[i];
+//            cv::Point p(kpt.x,kpt.y); // x is in the col direction!
+//            cv::circle(out, p, kpt.score*5, cv::Scalar(0, 255, 255));
+//        }
+//        cv::resize(out,out,cv::Size(col,row),cv::INTER_CUBIC);
+//        string imgname="../out/output/";
+//        cv::imwrite(imgname+"result_"+to_string(id)+".jpg", out);
+//        id++;
+//    }
 
-    float x[18],y[18],s[18];
-    for(int k=0;k<18;k+=3)
+
+
+
+    float x[18]={0},y[18]={0},s[18]={0};
+//    for(int k=0;k<18;k+=3)
+    for(int k=0;k<18;k++)
     {
         if(k>all_keypoints.size())
-        {
-            x[k]=0;y[k]=0;s[k]=0;
-//            key_pointsT kpt={0,0,0};
-//            all_keypoints.push_back(kpt);
-        }
+            continue;
         else{
             x[k]=all_keypoints[k].x;
             y[k]=all_keypoints[k].y;
@@ -290,15 +319,18 @@ Result OpenPoseProcess::Postprocess(aclmdlDataset*& modelOutput,float motion_dat
         }
     }
 
+//    for(int i=0;i<18;i++)
+//        cout<<"x: "<<x[i]<<"y: "<<y[i]<<"s: "<<s[i]<<endl;
 
-    // move and add at the queue tail
-    memcpy(motion_data[0][0][FRAME_LENGTH-1], x, sizeof(x));
+    // dump pose result to motion data from tail to head
+    memcpy(motion_data[0][0][FRAME_LENGTH-1], x, sizeof(x)); // add new pose data to the tail
     memcpy(motion_data[0][1][FRAME_LENGTH-1], y, sizeof(y));
     memcpy(motion_data[0][2][FRAME_LENGTH-1], s, sizeof(s));
-    memcpy(motion_data[0][0][0],motion_data_old[0][0][1],sizeof(x)*(FRAME_LENGTH-1));
+    memcpy(motion_data[0][0][0],motion_data_old[0][0][1],sizeof(x)*(FRAME_LENGTH-1)); // move out the data at the head
     memcpy(motion_data[0][1][0],motion_data_old[0][1][1],sizeof(y)*(FRAME_LENGTH-1));
     memcpy(motion_data[0][2][0],motion_data_old[0][2][1],sizeof(s)*(FRAME_LENGTH-1));
-    memcpy(motion_data_old,motion_data,sizeof(x)*FRAME_LENGTH*3);
+    memcpy(motion_data_old,motion_data,sizeof(x)*FRAME_LENGTH*3); // update old data
+
 
     //求中心点坐标,并中心化
 //    float skeleton_center[2][FRAME_LENGTH]={0.0};

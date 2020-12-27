@@ -41,8 +41,8 @@ def read_capture():
             continue
         print ("发送第%d张图片"%num)
         num += 1
-        # 一百张图片一次循环
-        num = num % MAX_FRAME
+        if num >= MAX_FRAME:
+            num = num % MAX_FRAME # number from 0 to MAX_FRAME-1
 
         cv2.namedWindow('capture face detection', cv2.WINDOW_NORMAL)
         cv2.imshow('capture face detection', img_np)

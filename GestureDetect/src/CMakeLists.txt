@@ -36,6 +36,7 @@ else ()
 endif()
 
 # Header path
+# message(STATUS "$ENV{HOME}")
 include_directories(
     $ENV{HOME}/ascend_ddk/arm/include/
     $ENV{HOME}/ascend_ddk/arm/include/opencv4

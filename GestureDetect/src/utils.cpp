@@ -163,7 +163,35 @@ void* Utils::CopyDataHostToDevice(void* deviceData, uint32_t dataSize) {
     return CopyDataToDevice(deviceData, dataSize, ACL_MEMCPY_HOST_TO_DEVICE);
 }
 
+void Utils::write_motion_data(float motion_data[1][3][FRAME_LENGTH][18])
+{
+    static int dataid=0;
 
+    cout<<"writing motion data..."<<"id: "<<dataid<<endl;
+    ofstream fout;
+    string filename="./output/motion_data_";
+    filename+=to_string(dataid)+".txt";
+    fout.open(filename);
+    fout.setf(ios::fixed);
+    fout.precision(8);
+    if(dataid<32)
+    {
+        for(int i=0;i<3;i++)
+        {
+            for(int j=0;j<FRAME_LENGTH;j++)
+            {
+                for(int k=0;k<18;k++)
+                {
+                    fout<<motion_data[0][i][j][k]<<" ";
+                }
+
+            }
+        }
+        cout<<"write motion data success!"<<endl;
+    }
+    dataid++;
+
+}
 //Result Utils::CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode) {
 //    void * buffer;
 //    if (mode == ACL_HOST)

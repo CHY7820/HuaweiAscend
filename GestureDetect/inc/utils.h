@@ -160,6 +160,7 @@ public:
     static void* CopyDataHostToDevice(void* deviceData, uint32_t dataSize);
     static void* CopyDataDeviceToDevice(void* deviceData, uint32_t dataSize);
 
+    static void write_motion_data(float motion_data[1][3][FRAME_LENGTH][18]);
 
     //    static int ReadImageFile(ImageData& image, std::string fileName);
 //    static Result CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode);

@@ -14,7 +14,7 @@ private:
     void EncodeImage(vector<uint8_t>& encodeImg, cv::Mat& origImg);
     Result SendImage(cv::Mat& image);
     Result OpenPresenterChannel();
-    ascend::presenter::Channel* channel_ = nullptr;
+    ascend::presenter::Channel* channel_ = nullptr; // presenter server channel
 
 };
 

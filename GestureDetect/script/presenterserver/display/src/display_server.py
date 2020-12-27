@@ -212,6 +212,7 @@ def run():
         return None
 
     logging.info("presenter server is starting...")
+
     server_address = (config.presenter_server_ip,
                       int(config.presenter_server_port))
     return DisplayServer(server_address)
