@@ -1,5 +1,0 @@
-/home/mind/AscendProjects/GestureDetect/build/cmake/CMakeFiles/rebuild_cache.dir
-/home/mind/AscendProjects/GestureDetect/build/cmake/CMakeFiles/edit_cache.dir
-/home/mind/AscendProjects/GestureDetect/build/cmake/src/CMakeFiles/rebuild_cache.dir
-/home/mind/AscendProjects/GestureDetect/build/cmake/src/CMakeFiles/main.dir
-/home/mind/AscendProjects/GestureDetect/build/cmake/src/CMakeFiles/edit_cache.dir
