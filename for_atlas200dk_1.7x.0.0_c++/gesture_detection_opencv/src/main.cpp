@@ -9,18 +9,22 @@
 */
 #include <cstdint>
 #include <iostream>
+
 #include "gesture_detect.h"
 #include "utils.h"
+
 using namespace std;
 bool g_isDevice = false;
 
 
 namespace {
 const char* kOpenPoseModelPath = "../model/openpose_deploy.om";
-const char* kGestureModelPath = "../model/stgcn_deploy.om";
-const std::string kImageDir = "../data/";
-
+const char* kGestureModelPath = "../model/stgcn_deploy_24.om";
+string kImageDir = "../data/";
 }
+
+// OpenPose model: (1,3,120,160) -- NCHW from caffe
+// STGCN model: (1,3,100,18) -- NHWC from tensorflow
 
 int main()
 {
@@ -31,14 +35,14 @@ int main()
         return FAILED;
     }
 
-    ret = detect.Process();
+    ret = detect.Process(); // main process here
     if (ret != SUCCESS) {
         ERROR_LOG("Detect process failed");
         return FAILED;
     }
 
     INFO_LOG("Detect process success");
-
+    detect.DeInit();
 
     return SUCCESS;
 }

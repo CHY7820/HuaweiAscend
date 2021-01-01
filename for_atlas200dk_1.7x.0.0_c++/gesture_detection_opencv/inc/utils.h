@@ -24,6 +24,7 @@
 #include <mutex>
 #include <unistd.h>
 #include <vector>
+
 #include "eigen3/Eigen/Core"
 #include "eigen3/Eigen/Dense"
 #include "opencv2/highgui.hpp"
@@ -32,6 +33,9 @@
 #include "opencv2/imgcodecs/legacy/constants_c.h"
 #include "opencv2/imgproc/types_c.h"
 #include "acl/acl.h"
+#include "ascenddk/presenter/agent/presenter_types.h"
+#include "ascenddk/presenter/agent/errors.h"
+#include "ascenddk/presenter/agent/presenter_channel.h"
 
 using namespace std;
 
@@ -45,7 +49,8 @@ using namespace std;
 
 #define FRAME_LENGTH 100
 #define PEOPLE_MOST 10
-
+#define modelWidth_ 160
+#define modelHeight_ 120
 
 template<class Type>
 std::shared_ptr<Type> MakeSharedNoThrow() {
@@ -69,14 +74,6 @@ typedef enum Result {
 }Result;
 
 
-struct Rect {
-    uint32_t ltX = 0;
-    uint32_t ltY = 0;
-    uint32_t rbX = 0;
-    uint32_t rbY = 0;
-};
-
-
 
 typedef struct key_point{
     float x;
@@ -87,58 +84,26 @@ typedef struct key_point{
 
 
 
-typedef struct connection{
-    int point_1;
-    int point_2;
-	// score是连接的分数
-    float score;
-	//它两头的关键点分数
-	float score1;
-	float score2;
-} connectionT;
 
-typedef struct ohuamn {
-	//全部为负数
-	// 存的是全局序号
-	int p[18] = { -1 };
-	float allscore = 0;
-	int keynum = 0;
-	int flag = -1;
-} human;
+//const string gesture_labels[] = {"applauding","bending back","blowing nose","carrying baby",
+//"celebrating","clapping","crawling baby","crying","drinking","exercising arm","headbanging",
+//"headbutting","high kick","jogging","laughing","lunge","pull ups","punching person (boxing)",
+//"push up","shaking hands","shaking head","side kick","sign language interpreting","singing",
+//"situp","slapping","smoking","sneezing","sniffing","somersaulting","squat","stretching arm",
+//"stretching leg","swinging legs","swinging on something","tai chi","tasting food","washing hands",
+//"writing","yawning"};
 
-// jiashi changed
-//typedef struct EngineTransNew
-//{
-//    //    std::vector<std::vector<std::vector<float>>> data;
-//	// 最后一维是关键点
-//	// 倒数第二维是帧
-//	// 正数第二维是x与y
-//	// 那第一维应该是人？
-//    float data [1][3][FRAME_LENGTH][18];
-//    //    float data [2][30][14];
-//    size_t buffer_size ;   // buffer size
-//}EngineTransNewT;
+const string gesture_labels[] = {"applauding","bending back","celebrating","clapping","crying",
+"drinking","headbanging","headbutting","high kick","jogging","laughing","pull ups","push up",
+"shaking head","side kick","sign language interpreting","sit up","squat","stretching arm",
+"stretching leg","tai chi","tasting food","writing","yawning"};
 
-
-struct BBox {
-    Rect rect;
-    uint32_t score;
-    string text;
-};
-
-const string gesture_labels[] = {"applauding","bending back","blowing nose","carrying baby",
-"celebrating","clapping","crawling baby","crying","drinking","exercising arm","headbanging",
-"headbutting","high kick","jogging","laughing","lunge","pull ups","punching person (boxing)",
-"push up","shaking hands","shaking head","side kick","sign language interpreting","singing",
-"situp","slapping","smoking","sneezing","sniffing","somersaulting","squat","stretching arm",
-"stretching leg","swinging legs","swinging on something","tai chi","tasting food","washing hands",
-"writing","yawning"};
+//const string gesture_labels[] {" ","swiping down","swiping left","swiping right","swiping up"};
 
 /**
  * Utils
  */
-class Utils {
-public:
+namespace Utils {
 
     /**
     * @brief create device buffer of pic
@@ -146,23 +111,26 @@ public:
     * @param [in] PicBufferSize: aligned pic size
     * @return device buffer of pic
     */
-    static bool IsDirectory(const std::string &path);
+    bool IsDirectory(const std::string &path);
 
-    static bool IsPathExist(const std::string &path);
+    bool IsPathExist(const std::string &path);
 
-    static void SplitPath(const std::string &path, std::vector<std::string> &path_vec);
+    void SplitPath(const std::string &path, std::vector<std::string> &path_vec);
 
-    static void GetAllFiles(const std::string &path, std::vector<std::string> &file_vec);
+    void GetAllFiles(const std::string &path, std::vector<std::string> &file_vec);
 
-    static void GetPathFiles(const std::string &path, std::vector<std::string> &file_vec);
-    static void* CopyDataToDevice(void* data, uint32_t dataSize, aclrtMemcpyKind policy);
-    static void* CopyDataDeviceToLocal(void* deviceData, uint32_t dataSize);
-    static void* CopyDataHostToDevice(void* deviceData, uint32_t dataSize);
-    static void* CopyDataDeviceToDevice(void* deviceData, uint32_t dataSize);
+    void GetPathFiles(const std::string &path, std::vector<std::string> &file_vec);
+    void* CopyDataToDevice(void* data, uint32_t dataSize, aclrtMemcpyKind policy);
+    void* CopyDataDeviceToLocal(void* deviceData, uint32_t dataSize);
+    void* CopyDataHostToDevice(void* deviceData, uint32_t dataSize);
+    void* CopyDataDeviceToDevice(void* deviceData, uint32_t dataSize);
 
-    static void write_motion_data(float motion_data[1][3][FRAME_LENGTH][18]);
+    void write_motion_data(float motion_data[1][3][FRAME_LENGTH][18]);
+    void write_array_data(float* array,int n,string name);
 
-    //    static int ReadImageFile(ImageData& image, std::string fileName);
-//    static Result CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode);
-};
+    void ProcessMotionData(float motion_data[1][3][FRAME_LENGTH][18]);
+
+    void put_text(cv::Mat& frame,string text);
+
+}; // namespace Utils
 

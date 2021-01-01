@@ -187,82 +187,53 @@ void Utils::write_motion_data(float motion_data[1][3][FRAME_LENGTH][18])
 
             }
         }
-        cout<<"write motion data success!"<<endl;
+        //cout<<"write motion data success!"<<endl;
     }
     dataid++;
 
 }
-//Result Utils::CopyImageDataToDevice(ImageData& imageDevice, ImageData srcImage, aclrtRunMode mode) {
-//    void * buffer;
-//    if (mode == ACL_HOST)
-//        buffer = Utils::CopyDataHostToDevice(srcImage.data.get(), srcImage.size);
-//    else
-//        buffer = Utils::CopyDataDeviceToDevice(srcImage.data.get(), srcImage.size);
-//
-//    if (buffer == nullptr) {
-//        ERROR_LOG("Copy image to device failed");
-//        return FAILED;
+
+void Utils::write_array_data(float* array,int n,string name)
+{
+    ofstream fout;
+    string filename="./output/"+name+".txt";
+    fout.open(filename);
+    fout.setf(ios::fixed);
+    fout.precision(8);
+    for(int i=0;i<n;i++)
+    {
+        fout<<array[i]<<" ";
+    }
+
+}
+
+// 标准化骨骼关键点序列
+void Utils::ProcessMotionData(float motion_data[1][3][FRAME_LENGTH][18]) {
+    for(int i=0;i<2;i++) {
+        for(int j=0;j<FRAME_LENGTH;j++) {
+            for(int k=0;k<18;k++)
+            {
+                if(motion_data[0][i][j][k]==0) continue;
+                if(i==0)
+                    motion_data[0][i][j][k]=motion_data[0][i][j][k]/modelWidth_-0.5;
+                else
+                    motion_data[0][i][j][k]=-0.5+motion_data[0][i][j][k]/modelHeight_;
+            }
+        }
+
+    }
+
+//    for(int k=0;k<18;k++)
+//    {
+//        cout<<"x-y-s: "<<motion_data[0][0][0][k]<<"-"<<motion_data[0][1][0][k]<<"-"<<motion_data[0][2][0][k]<<endl;
 //    }
-//
-//    imageDevice.width = srcImage.width;
-//    imageDevice.height = srcImage.height;
-//    imageDevice.size = srcImage.size;
-//    imageDevice.data.reset((uint8_t*)buffer, [](uint8_t* p) { aclrtFree((void *)p); });
-//
-//    return SUCCESS;
-//}
-//
-//int Utils::ReadImageFile(ImageData& image, std::string fileName)
-//{
-//    //uint32_t width = 0, height = 0;
-//    //GetJPEGWidthHeight(fileName.c_str(), &width, &height);
-//    //INFO_LOG("jpeg width %d, height %d", width, height);
-//
-//    struct stat sBuf;
-//    int fileStatus = stat(fileName.data(), &sBuf);
-//    if (fileStatus == -1) {
-//        ERROR_LOG("failed to get file");
-//        return FAILED;
-//    }
-//    if (S_ISREG(sBuf.st_mode) == 0) {
-//        ERROR_LOG("%s is not a file, please enter a file", fileName.c_str());
-//        return FAILED;
-//    }
-//    std::ifstream binFile(fileName, std::ifstream::binary);
-//    if (binFile.is_open() == false) {
-//        ERROR_LOG("open file %s failed", fileName.c_str());
-//        return FAILED;
-//    }
-//
-//    binFile.seekg(0, binFile.end);
-//    uint32_t binFileBufferLen = binFile.tellg();
-////    cout << "binFileBufferLen   " << binFileBufferLen << endl;
-//    if (binFileBufferLen == 0) {
-////        ERROR_LOG("binfile is empty, filename is %s", fileName.c_str());
-//        binFile.close();
-//        return FAILED;
-//    }
-//
-//    binFile.seekg(0, binFile.beg);
-//
-//    uint8_t* binFileBufferData = new(std::nothrow) uint8_t[binFileBufferLen];
-//    if (binFileBufferData == nullptr) {
-//        ERROR_LOG("malloc binFileBufferData failed");
-//        binFile.close();
-//        return FAILED;
-//    }
-//    binFile.read((char *)binFileBufferData, binFileBufferLen);
-//    binFile.close();
-//
-//    int32_t ch = 0;
-//    acldvppJpegGetImageInfo(binFileBufferData, binFileBufferLen,
-//              &(image.width), &(image.height), &ch);
-//    image.data.reset(binFileBufferData, [](uint8_t* p) { delete[](p); });
-//    image.size = binFileBufferLen;
-//
-//    return SUCCESS;
-//}
-//int Utils::ReadImageFile(std::string fileName)
-//{
-//
-//}
+
+}
+
+void Utils::put_text(cv::Mat& image,string text)
+{
+    cv::Point origin;
+    origin.x=image.cols/8;
+    origin.y=image.rows/10;
+    cv::putText(image,text,origin,cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(100,50,130));
+}

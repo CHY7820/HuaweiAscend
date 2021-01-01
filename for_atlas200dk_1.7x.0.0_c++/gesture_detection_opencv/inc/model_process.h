@@ -9,6 +9,7 @@
 */
 #pragma once
 #include <iostream>
+
 #include "utils.h"
 #include "acl/acl.h"
 
@@ -116,8 +117,6 @@ private:
     aclmdlDesc *modelDesc_;
     aclmdlDataset *input_;
     aclmdlDataset *output_;
-
-
 
 
 };

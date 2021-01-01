@@ -1,9 +1,11 @@
 #pragma once
 
 #include "gesture_process.h"
+
+#include "acl/acl.h"
+
 #include "pose_process.h"
 #include "utils.h"
-#include "acl/acl.h"
 
 
 class GestureDetect {
@@ -13,14 +15,16 @@ public:
     Result Init();
     Result Process();
     void DeInit();
-    float motion_data [1][3][FRAME_LENGTH][18];
+
 
 private:
 
     Result InitResource();
     Result InitModel(const char* OpenPoseModelPath, const char* GestureModelPath);
     Result ProcessMotionData();
-
+    Result OpenPresenterChannel();
+    void EncodeImage(vector<uint8_t>& encodeImg, cv::Mat& origImg);
+    void SendImage(cv::Mat& image);
 
     OpenPoseProcess OpenPoseModel_;
     GestureProcess GestureModel_;
@@ -34,9 +38,8 @@ private:
     const char* GestureModelPath_;
 
     bool isInited_;
-
+    ascend::presenter::Channel* channel_;
 
     aclmdlDataset* input_;
     aclmdlDataset* output_;
-//    std::shared_ptr<EngineTransNewT> motion_data_new = std::make_shared<EngineTransNewT>();
 };
