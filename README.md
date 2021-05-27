@@ -1,6 +1,8 @@
 # Gesture Detection
 
-<video src="./figures/present.mp4"></video>
+[![Watch the video](https://tva1.sinaimg.cn/large/008i3skNly1gqws7ky5w6j31ss0u0npd.jpg)](./figures/present.mp4)
+
+
 
 ## 1 项目简介
 
