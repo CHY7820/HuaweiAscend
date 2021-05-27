@@ -1,4 +1,6 @@
-# 200DK实时动作识别
+# Gesture Detection
+
+<video src="./figures/present.mp4"></video>
 
 ## 1 项目简介
 
@@ -10,7 +12,7 @@
 
 ## 2 总体设计
 
-<img src="../../../Library/Application%20Support/typora-user-images/image-20210102185120263.png" alt="image-20210102185120263" style="zoom:67%;" />
+<img src="figures/layout.png" alt="image-20210102185120263" style="zoom:67%;" />
 
 1. 初始化：申请运行资源，加载模型文件，开启 Presenter Server
 
@@ -20,14 +22,17 @@
 
 4. 结果输出：将推理结果放于当前视频流中，传输回Host端，由Server将其展示到Web端
 
-   
-
-## 模型简介
-
-### OpenPose
-### STGCN
 
 
+### 总体设计
 
-## 项目性能
+### 网络结构
+
+### 原始模型
+#### OpenPose
+#### STGCN
+
+### 预处理
+### 后处理
+### 性能
 

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="e6c425c3-4847-40a5-93d8-b959e616d4b1" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ProjectId" id="1qNprYQuJo1WsylZBQtFEGdVVGh" />
+  <component name="ProjectViewState">
+    <option name="flattenPackages" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+    <option name="showVisibilityIcons" value="true" />
+    <option name="sortByType" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$USER_HOME$/modelzoo/stgcn_epoch30/device/stgcn_epoch30.om" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="system.adk" />
+  </component>
+  <component name="RunManager">
+    <configuration name="GestureDetection" type="Ascend App Configuration Type" factoryName="Ascend App" executable="out/main" runMode="Remote" sshConfigId="42fc8189-7d05-4078-8207-bbdf306f0047" commandArguments="" environmentVariables="" toolkit_path="" ProfilingParams="{&quot;--aic-freq&quot;:&quot;100&quot;,&quot;advanced_acl&quot;:&quot;false&quot;,&quot;ProfilingStatus&quot;:&quot;off&quot;,&quot;--aic-mode&quot;:&quot;task-based&quot;,&quot;advanced_ge&quot;:&quot;false&quot;,&quot;hasError&quot;:&quot;off&quot;,&quot;--profiling_options&quot;:&quot;task_trace&quot;,&quot;--aic-metrics&quot;:&quot;PipeUtilization&quot;,&quot;advanced_runtime&quot;:&quot;false&quot;,&quot;advanced_ts&quot;:&quot;false&quot;}">
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="Ascend App Configuration Type" factoryName="Ascend App" executable="" runMode="Remote" sshConfigId="42fc8189-7d05-4078-8207-bbdf306f0047" commandArguments="" environmentVariables="" toolkit_path="">
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="416" y="30" width="1024" height="845" key="#Project_Structure" timestamp="1622045265386">
+      <screen x="67" y="27" width="1851" height="861" />
+    </state>
+    <state x="416" y="30" width="1024" height="845" key="#Project_Structure/67.27.1851.861@67.27.1851.861" timestamp="1622045265386" />
+    <state x="450" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1618587352055">
+      <screen x="67" y="27" width="1849" height="851" />
+    </state>
+    <state x="450" y="113" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.1849.851@67.27.1849.851" timestamp="1618587352055" />
+    <state x="450" y="114" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.1851.861@67.27.1851.861" timestamp="1616931696718" />
+    <state x="774" y="199" key="FileChooserDialogImpl" timestamp="1622047396014">
+      <screen x="67" y="27" width="1851" height="861" />
+    </state>
+    <state x="693" y="197" key="FileChooserDialogImpl/67.27.1640.851@67.27.1640.851" timestamp="1619625177045" />
+    <state x="773" y="197" key="FileChooserDialogImpl/67.27.1849.851@67.27.1849.851" timestamp="1618586521387" />
+    <state x="774" y="199" key="FileChooserDialogImpl/67.27.1851.861@67.27.1851.861" timestamp="1622047396014" />
+    <state width="1709" height="254" key="GridCell.Tab.0.bottom" timestamp="1622047532772">
+      <screen x="67" y="27" width="1851" height="861" />
+    </state>
+    <state width="1617" height="342" key="GridCell.Tab.0.bottom/67.27.1640.851@67.27.1640.851" timestamp="1619625423677" />
+    <state width="1618" height="245" key="GridCell.Tab.0.bottom/67.27.1641.851@67.27.1641.851" timestamp="1619481487538" />
+    <state width="1709" height="339" key="GridCell.Tab.0.bottom/67.27.1849.851@67.27.1849.851" timestamp="1618588395783" />
+    <state width="1709" height="254" key="GridCell.Tab.0.bottom/67.27.1851.861@67.27.1851.861" timestamp="1622047532772" />
+    <state width="866" height="78" key="GridCell.Tab.0.bottom/67.27.889.851@67.27.889.851" timestamp="1621523986013" />
+    <state width="1709" height="254" key="GridCell.Tab.0.center" timestamp="1622047532770">
+      <screen x="67" y="27" width="1851" height="861" />
+    </state>
+    <state width="1617" height="342" key="GridCell.Tab.0.center/67.27.1640.851@67.27.1640.851" timestamp="1619625423676" />
+    <state width="1618" height="245" key="GridCell.Tab.0.center/67.27.1641.851@67.27.1641.851" timestamp="1619481487537" />
+    <state width="1709" height="339" key="GridCell.Tab.0.center/67.27.1849.851@67.27.1849.851" timestamp="1618588395780" />
+    <state width="1709" height="254" key="GridCell.Tab.0.center/67.27.1851.861@67.27.1851.861" timestamp="1622047532770" />
+    <state width="866" height="78" key="GridCell.Tab.0.center/67.27.889.851@67.27.889.851" timestamp="1621523986011" />
+    <state width="1709" height="254" key="GridCell.Tab.0.left" timestamp="1622047532770">
+      <screen x="67" y="27" width="1851" height="861" />
+    </state>
+    <state width="1617" height="342" key="GridCell.Tab.0.left/67.27.1640.851@67.27.1640.851" timestamp="1619625423676" />
+    <state width="1618" height="245" key="GridCell.Tab.0.left/67.27.1641.851@67.27.1641.851" timestamp="1619481487537" />
+    <state width="1709" height="339" key="GridCell.Tab.0.left/67.27.1849.851@67.27.1849.851" timestamp="1618588395779" />
+    <state width="1709" height="254" key="GridCell.Tab.0.left/67.27.1851.861@67.27.1851.861" timestamp="1622047532770" />
+    <state width="866" height="78" key="GridCell.Tab.0.left/67.27.889.851@67.27.889.851" timestamp="1621523986011" />
+    <state width="1709" height="254" key="GridCell.Tab.0.right" timestamp="1622047532772">
+      <screen x="67" y="27" width="1851" height="861" />
+    </state>
+    <state width="1617" height="342" key="GridCell.Tab.0.right/67.27.1640.851@67.27.1640.851" timestamp="1619625423677" />
+    <state width="1618" height="245" key="GridCell.Tab.0.right/67.27.1641.851@67.27.1641.851" timestamp="1619481487537" />
+    <state width="1709" height="339" key="GridCell.Tab.0.right/67.27.1849.851@67.27.1849.851" timestamp="1618588395782" />
+    <state width="1709" height="254" key="GridCell.Tab.0.right/67.27.1851.861@67.27.1851.861" timestamp="1622047532772" />
+    <state width="866" height="78" key="GridCell.Tab.0.right/67.27.889.851@67.27.889.851" timestamp="1621523986012" />
+    <state x="481" y="91" key="SettingsEditor" timestamp="1621436238032">
+      <screen x="67" y="27" width="1851" height="861" />
+    </state>
+    <state x="434" y="90" key="SettingsEditor/67.27.1640.851@67.27.1640.851" timestamp="1619623309123" />
+    <state x="481" y="90" key="SettingsEditor/67.27.1849.851@67.27.1849.851" timestamp="1618587349396" />
+    <state x="481" y="91" key="SettingsEditor/67.27.1851.861@67.27.1851.861" timestamp="1621436238032" />
+    <state x="158" y="131" width="1010" height="642" key="new project wizard" timestamp="1619481230515">
+      <screen x="67" y="27" width="1641" height="851" />
+    </state>
+    <state x="158" y="131" width="1010" height="642" key="new project wizard/67.27.1641.851@67.27.1641.851" timestamp="1619481230515" />
+    <state x="596" y="208" width="672" height="678" key="search.everywhere.popup" timestamp="1621265634839">
+      <screen x="67" y="27" width="1851" height="861" />
+    </state>
+    <state x="596" y="208" width="672" height="678" key="search.everywhere.popup/67.27.1851.861@67.27.1851.861" timestamp="1621265634839" />
+  </component>
+</project>
