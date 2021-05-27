@@ -12,15 +12,16 @@
 
 ## 2 总体设计
 
+系统运行的流程图如下：
+
 <img src="figures/workflow.png" alt="image-20210102185120263" style="zoom:67%;" />
 
+具体步骤为：
+
 1. 初始化：申请运行资源，加载模型文件，开启 Presenter Server
-
 2. 特征点提取：OpenPose模型实时处理摄像头传输的图像，提取图像中的人体特征点
-
 3. 动作推理：STGCN模型根据人体特征点序列推理动作类型
-
-4. 结果输出：将推理结果放于当前视频流中，传输回Host端，由Server将其展示到Web端
+4. 结果输出：将推理结果放于当前视频流中，传输回Host端，由Presenter Server将其展示到Web端
 
 
 
