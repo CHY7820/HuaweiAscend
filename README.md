@@ -8,6 +8,8 @@
 
 本项目将OpenPose、ST-GCN两种网络模型相结合，实现一个实时动作检测系统，并结合Presenter Server在Ascend Atlas 200 Develop Kit 上进行移植与部署，在Web端展示运行效果。
 
+<img src="./figures/atlas200dk.jpg" alt="atlas200dk" style="zoom: 33%;" />
+
 
 
 ## 2 总体设计
