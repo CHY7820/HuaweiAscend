@@ -20,18 +20,19 @@ add_definitions(-DENABLE_DVPP_INTERFACE)
 set(INC_PATH $ENV{DDK_PATH}) # ascend-toolkit 20.1
 set(LIB_PATH $ENV{NPU_HOST_LIB})
 
-set(ROOT_PATH "/home/mind/Ascend")
-#message("${INC_PATH}/acllib/include/ ")
+#set(ROOT_PATH "/home/mind/Ascend")
+message(STATUS "inc_path: ${INC_PATH}")
+message(STATUS "ddk_path: ${DDK_PATH}")
+message(STATUS "home path: $ENV{HOME}")
 # Header path
-# message(STATUS "$ENV{HOME}")
-# message("${ROOT_PATH}/ascend_ddk/arm/include/opencv4")
 include_directories(
-    ${ROOT_PATH}/ascend_ddk/arm/include/opencv4/ # opencv
-    ${ROOT_PATH}/ascend_ddk/arm/include/
-    ${ROOT_PATH}/presenteragent/include/ # presenter agent lib path
-    ${ROOT_PATH}/presenteragent/include/ascenddk/ # presenter agent lib path
+    $ENV{HOME}/Ascend/ascend_ddk/arm/include/opencv4/ # opencv
+    $ENV{HOME}/Ascend/ascend_ddk/arm/include/
+    $ENV{HOME}/Ascend/presenteragent/include/ # presenter agent lib path
+    $ENV{HOME}/Ascend/presenteragent/include/ascenddk/ # presenter agent lib path
     ${INC_PATH}/acllib/include/ # acllib
-    ${ROOT_PATH}/  # driver etc.
+    $ENV{HOME}/Ascend/  # driver etc.
+    #/usr/local/include/
     ../inc/
 )
 
@@ -42,9 +43,10 @@ endif()
 # add host lib path
 link_directories(
     ${LIB_PATH}
-    ${ROOT_PATH}/driver/
-    ${ROOT_PATH}/ascend_ddk/arm/lib/ # opencv here
-    ${ROOT_PATH}}/presenteragent/include/agent/ # presenteragent here
+    $ENV{HOME}/Ascend/driver/
+    $ENV{HOME}/Ascend/ascend_ddk/arm/lib/ # opencv here
+    $ENV{HOME}/Ascend/presenteragent/include/agent/ # presenteragent here
+    #/usr/local/lib/
 )
 
 add_executable(main

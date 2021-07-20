@@ -21,6 +21,11 @@
 using namespace std;
 using namespace ascend::presenter;
 
+namespace {
+    const char *aclConfigPath = "../src/acl.json";
+    const char *kConfigFile = "../script/param.conf";
+}
+
 GestureDetect::GestureDetect(const char* kOpenPoseModelPath,const char* kGestureModelPath)
 : deviceId_(0),context_(nullptr),stream_(nullptr),channel_(nullptr),
 isInited_(false),OpenPoseModelPath_(kOpenPoseModelPath), GestureModelPath_(kGestureModelPath) {
@@ -37,14 +42,13 @@ GestureDetect::~GestureDetect() {
 Result GestureDetect::OpenPresenterChannel() {
     // will listen on host_ip:port, and present on web_ip:web_port
 
-    ascend::presenter::OpenChannelParam param;
-    param.host_ip = "192.168.1.134";  //IP address of Presenter Server
-    param.port = 7008;  //port of present service
-    param.channel_name = "Gesture Recognization";
-    param.content_type = ascend::presenter::ContentType::kVideo;  //content type is Video
+//    param.host_ip = "192.168.1.134";  //IP address of Presenter Server
+//    param.port = 7008;  //port of present service
+//    param.channel_name = "Gesture Recognization";
+//    param.content_type = ascend::presenter::ContentType::kVideo;  //content type is Video
     INFO_LOG("OpenChannel start");
-    ascend::presenter::PresenterErrorCode errorCode =ascend::presenter::OpenChannel(channel_, param);
-    INFO_LOG("OpenChannel param");
+    ascend::presenter::PresenterErrorCode errorCode =ascend::presenter::OpenChannelByConfig(channel_, kConfigFile);
+//    INFO_LOG("OpenChannel param");
     if (errorCode != ascend::presenter::PresenterErrorCode::kNone) {
         ERROR_LOG("OpenChannel failed %d", static_cast<int>(errorCode));
         return FAILED;
@@ -55,7 +59,6 @@ Result GestureDetect::OpenPresenterChannel() {
 
 Result GestureDetect::InitResource() {
 
-    const char *aclConfigPath = "../src/acl.json";
     aclError ret = aclInit(aclConfigPath);
     if(ret!=ACL_ERROR_NONE) {
         ERROR_LOG("acl init failed");
@@ -424,12 +427,10 @@ void GestureDetect::DeInit() {
         }
         stream_ = nullptr;
     }
-    cout<<"hello"<<endl;
     ret = aclrtResetDevice(deviceId_);
     if(ret != ACL_ERROR_NONE) {
         ERROR_LOG("reset device failed");
     }
-    cout<<"hello"<<endl;
     ret = aclFinalize();
     if(ret != ACL_ERROR_NONE) {
         ERROR_LOG("finalize acl failed");

@@ -9,10 +9,7 @@
 #include<fstream>
 
 
-#include "eigen3/Eigen/Core"
-#include "eigen3/Eigen/Dense"
 #include "opencv2/highgui.hpp"
-#include "opencv2/core/eigen.hpp"
 #include "opencv2/imgproc.hpp"
 #include "presenter/agent/presenter_channel.h"
 
